@@ -84,7 +84,7 @@ class EImodelPanel(bpy.types.Panel):
         # unpack layers
         #layout.operator("object.knopo4ka", text="start button   :)")
         layout.label(text="~")
-        layout.operator("object.refresh_test_unit", text="refresh",)
+        layout.operator("object.refresh_test_unit", text="test unit",)
         layout.prop(context.scene, "MeshStr")
         layout.prop(context.scene, "MeshDex")
         layout.prop(context.scene, "MeshHeight")
@@ -143,6 +143,14 @@ def format_obj(cur_obj):
     bm.to_mesh(me)
     bm.free()
 
+def toObjectMode():
+    """
+    set all meshes to 'OBJECT MODE'
+    """
+    for obj in bpy.data.objects:
+            if obj.type == 'MESH':
+                scn.objects.active = obj
+                bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
 def detect_morph(obj, objtype, morph_ind):
     """
@@ -499,17 +507,20 @@ class ei_mesh:
             for uv_ind1 in uv_ar:  # get indicies of new t_coords array
                 #for uv_ind2 in range(len(self.t_coords)):
                 for uv_ind2 in self.t_coords:
-                    if uv_ar[uv_ind1] == self.t_coords[uv_ind2]:
-                        new_uv_ind.append(uv_ind2)
+                    #if uv_ar[uv_ind1] == self.t_coords[uv_ind2]:
+                    if uv_ind1 == uv_ind2:
+                        #new_uv_ind.append(uv_ind2)
+                        new_uv_ind.append(self.t_coords.index(uv_ind2))
 
             # VERTEX COMPONENTS
             for n_i in range(len(ind_ar)):
-                uv_temp = [ind_ar[n_i], new_uv_ind[n_i]]
-                if uv_temp not in self.v_c:
+                uv_ind = [ind_ar[n_i], new_uv_ind[n_i]]
+                print (uv_ind)
+                if uv_ind not in self.v_c:
                     # print ('uv_temp: '+str(uv_temp))
                     # try to change on tuple (tuple provide error)
-                    self.v_c.append(copy.copy(uv_temp))
-            # swap_pts = 0
+                    self.v_c.append(copy.copy(uv_ind))
+            #todo use other sort instead bubble sort
             for bub in range(len(self.v_c)):
                 for buble in range(len(self.v_c) - 1):
                     if self.v_c[buble][0] > self.v_c[buble + 1][0]:
@@ -523,14 +534,20 @@ class ei_mesh:
                             self.v_c[buble] = copy.copy(swap_pts)
             self.header[4] = len(self.v_c)
             # INDICIES
+            #todo refactore
             for mix in range(len(ind_ar)):
                 for mix1 in range(len(self.v_c)):
                     if (ind_ar[mix] == self.v_c[mix1][0]) & (new_uv_ind[mix] == self.v_c[mix1][1]):
                         self.indicies.append(mix1)
                         break
             # group of object & texture number
-            gt_object = {'world': [22, 7], 'weapon': [19, 2], 'shop_w': [
-                18, 2], 'quest': [17, 8], 'quick': [17, 8], 'loot': [18, 8]}
+            gt_object = {   'world': [22, 7], 
+                            'weapon': [19, 2], 
+                            'shop_w': [18, 2], 
+                            'quest': [17, 8],
+                            'quick': [17, 8],
+                            'loot': [18, 8]
+                            }
             self.header[7] = gt_object[sc.UvType][0]
             self.header[8] = gt_object[sc.UvType][1]
             #print('group:' + str(self.header[7]) + ' t_number:' + str(self.header[8]))
@@ -543,9 +560,12 @@ class ei_mesh:
             else:
                 uvt = 0
             for uvt_i in range(uvt):
-                for uvt_j in range(len(self.t_coords)):
-                    self.t_coords[uvt_j][0] /= 2
-                    self.t_coords[uvt_j][1] = 0.5 + self.t_coords[uvt_j][1] / 2
+                # for uvt_j in range(len(self.t_coords)):
+                #     self.t_coords[uvt_j][0] /= 2
+                #     self.t_coords[uvt_j][1] = 0.5 + self.t_coords[uvt_j][1] / 2
+                for uvConvert in self.t_coords:
+                    uvConvert[0] /= 2
+                    uvConvert[1] = 0.5 + uvConvert[1] / 2
 
     def get_from_mesh_simple(self, start_mesh, sc):
         for m_c in range(4):
@@ -862,12 +882,8 @@ class EIExport(bpy.types.Operator):
         path_file = self.filepath
         scn = bpy.context.scene
 
-        clean()  # delete objects & meshes without users
-        for obj in bpy.data.objects:  # set all object to 'OBJECT MODE'
-            if obj.type == 'MESH':
-                scn.objects.active = obj
-                # may be unhide all objects
-                bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+        clean()
+        toObjectMode()
 
         time_start = time.time()
         for obj in bpy.data.objects:
@@ -1140,7 +1156,7 @@ class refresh_test_table(bpy.types.Operator):
                 obj.select = True
                 bpy.ops.view3d.layers(nr=9, extend=False)
                 bpy.ops.object.delete()
-        clean()  # delete objects & meshes without users
+        clean()
         if mesh_list:
             mesh_list.clear()
         if pos_list:
@@ -1149,11 +1165,8 @@ class refresh_test_table(bpy.types.Operator):
             fig_table.clear()
         if bon_table:
             bon_table.clear()
-        for obj in bpy.data.objects:  # set all object to 'OBJECT MODE'
-            if obj.type == 'MESH':
-                scn.objects.active = obj
-                # may be unhide all objects
-                bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+        toObjectMode()
+
         for obj in bpy.data.objects:
             if obj.layers[0] and not obj.hide and obj.name[0:2] not in morph_comp.values():
                 mesh_list.append(morph_comp[8] + obj.data.name)
@@ -1166,6 +1179,7 @@ class refresh_test_table(bpy.types.Operator):
             cur_m = ei_mesh()
             cur_m.name = test_mesh
             mesh = bpy.data.meshes[test_mesh[2:]]
+            #todo make 1 function for get all meshes with morphing
             if scn.MorphType == 'hrd' and check_hard_morphing(mesh.name):
                 for i in range(8):
                     cur_m.get_from_mesh(bpy.data.meshes[morph_comp[i] + mesh.name], scn, i)
@@ -1184,8 +1198,7 @@ class refresh_test_table(bpy.types.Operator):
             obj = bpy.data.objects[test_obj[2:]]
             if scn.MorphType == 'hrd' and check_hard_morphing(obj.name):
                 for morph in range(8):
-                    cur_b.get_pos(
-                        bpy.data.objects[morph_comp[morph] + obj.name], morph)
+                    cur_b.get_pos(bpy.data.objects[morph_comp[morph] + obj.name], morph)
             if scn.MorphType == 'smpl':
                 for morph in range(4):
                     ob = detect_morph(obj, 'OBJECT', morph)
@@ -1242,21 +1255,21 @@ class morph_operators(bpy.types.Operator):
 # LNK IMPORT <==============================================================
 def import_lnk(lnkpath):
     lnks = dict()
-    f = open(lnkpath, 'rb')
-    s = unpack('i', f.read(4))
+    file = open(lnkpath, 'rb')
+    s = unpack('i', file.read(4))
     for l in range(s[0]):
-        tmp1 = unpack('i', f.read(4))[0]
-        child = unpack(str(tmp1 - 1) + 's', f.read(tmp1 - 1))[0].decode()
-        f.read(1)
-        tmp1 = unpack('i', f.read(4))[0]
+        tmp1 = unpack('i', file.read(4))[0]
+        child = unpack(str(tmp1 - 1) + 's', file.read(tmp1 - 1))[0].decode()
+        file.read(1)
+        tmp1 = unpack('i', file.read(4))[0]
         if tmp1 == 0:
             lnks[child] = None
             root = child
         else:
-            parent = unpack(str(tmp1 - 1) + 's', f.read(tmp1 - 1))[0].decode()
-            f.read(1)
+            parent = unpack(str(tmp1 - 1) + 's', file.read(tmp1 - 1))[0].decode()
+            file.read(1)
             lnks[child] = parent
-    f.close()
+    file.close()
     return lnks, root
 
 
