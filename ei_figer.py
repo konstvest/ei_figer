@@ -147,55 +147,53 @@ def toObjectMode():
     """
     set all meshes to 'OBJECT MODE'
     """
+    scene = bpy.context.scene
     for obj in bpy.data.objects:
-            if obj.type == 'MESH':
-                scn.objects.active = obj
-                bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+        if obj.type == 'MESH':
+            scene.objects.active = obj
+            bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
-def detect_morph(obj, objtype, morph_ind):
+def detect_morph(m_name, obj_type, morph_id):
     """
     Try to find any morphing components in scene
     """
-    if objtype == 'OBJECT':
-        if morph_ind == 1 or morph_ind == 2:
-            try:
-                obj = bpy.data.objects[morph_comp[morph_ind] + obj.name]
-                return obj
-            except KeyError:
-                obj = bpy.data.objects[obj.name]
-                return obj
-        if morph_ind == 3:
-            try:
-                obj = bpy.data.objects[morph_comp[morph_ind] + obj.name]
-                return obj
-            except KeyError:
-                try:
-                    obj = bpy.data.objects[morph_comp[1] + obj.name]
-                    return obj
-                except KeyError:
-                    obj = bpy.data.objects[obj.name]
-                    return obj
-        return obj
-    if objtype == 'MESH':
-        if morph_ind == 1 or morph_comp == 2 or morph_comp == 4:
-            try:
-                obj = bpy.data.meshes[morph_comp[morph_ind] + obj.name]
-                return obj
-            except KeyError:
-                obj = bpy.data.meshes[obj.name]
-                return obj
-        if morph_ind == 3:  # podymat', mb ybrat' etot pynkt, ved' tol'ko pervie 3 nado dlya simple morfa
-            try:
-                obj = bpy.data.meshes[morph_comp[morph_ind] + obj.name]
-                return obj
-            except KeyError:
-                try:
-                    obj = bpy.data.meshes[morph_comp[1] + obj.name]
-                    return obj
-                except KeyError:
-                    obj = bpy.data.meshes[obj.name]
-                    return obj
-        return obj
+    if obj_type == 'OBJECT':
+        try:
+            morph = bpy.data.objects[morph_comp[morph_id] + m_name]
+        except KeyError:
+            if morph_id == 1:
+                morph = detect_morph(m_name, obj_type, 0)
+            if morph_id == 2:
+                morph = detect_morph(m_name, obj_type, 0)
+            if morph_id == 3:
+                morph = detect_morph(m_name, obj_type, 1)
+            if morph_id == 4:
+                morph = detect_morph(m_name, obj_type, 0)
+            if morph_id == 5:
+                morph = detect_morph(m_name, obj_type, 1)
+            if morph_id == 6:
+                morph = detect_morph(m_name, obj_type, 2)
+            if morph_id == 7:
+                morph = detect_morph(m_name, obj_type, 3)
+    else:
+        try:
+            morph = bpy.data.meshes[morph_comp[morph_id] + m_name]
+        except KeyError:
+            if morph_id == 1:
+                morph = detect_morph(m_name, obj_type, 0)
+            if morph_id == 2:
+                morph = detect_morph(m_name, obj_type, 0)
+            if morph_id == 3:
+                morph = detect_morph(m_name, obj_type, 1)
+            if morph_id == 4:
+                morph = detect_morph(m_name, obj_type, 0)
+            if morph_id == 5:
+                morph = detect_morph(m_name, obj_type, 1)
+            if morph_id == 6:
+                morph = detect_morph(m_name, obj_type, 2)
+            if morph_id == 7:
+                morph = detect_morph(m_name, obj_type, 3)
+    return morph
 
 
 def get_hierarchy(parent, hierarchy):
@@ -353,7 +351,7 @@ class ei_mesh:
             else:
                 print('mesh header is not correct')
 
-    def create_mesh(self, MorphT):
+    def create_mesh(self, morphT):
         # FACES
         faces = []
         ftemp = [0, 0, 0]
@@ -365,15 +363,15 @@ class ei_mesh:
             faces.append([ftemp[0], ftemp[1], ftemp[2]])
             f += 3
         # =====>MESH IN SCENE<======
-        if MorphT == 'smpl':
+        if morphT == 'smpl':
             # try:
             #    scn.scalefig = self.verts[4][0][0] / self.verts[0][0][0]
             # except ZeroDivisionError:
             #    print ('ny ebana')
             models_count = 3
-        if MorphT == 'hrd':
+        if morphT == 'hrd':
             models_count = 8
-        if MorphT == 'non':
+        if morphT == 'non':
             models_count = 1
         for i in range(models_count):
             me = bpy.data.meshes.new(name=morph_comp[i] + self.name)
@@ -397,180 +395,12 @@ class ei_mesh:
                 mesh.uv_layers[0].data[t].uv[xy] = self.t_coords[self.v_c[self.indicies[t]][1]][xy]
         mesh.update()
 
-    def get_from_mesh(self, mesh, sc, m_c):
-        """ function for export with full morphing"""
-        count_vert = 0
-        count_norm = 0
-        v_restore = 0
-        ind_count = 0
-        tmp3 = [0, 0, 0]
-        duplicate_vert = 0
-        duplicate_ind = [[], []]
-        min_m = [0, 0, 0]
-        max_m = [0, 0, 0]
-
-        # VERTICES & NORMALS
-        for mvert in mesh.vertices:
-            same_flag = False
-            for same_vert in range(count_vert):
-                if mvert.co == mesh.vertices[same_vert].co:
-                    same_flag = True
-                    if m_c == 0:
-                        # print ('same_vert: '+str(same_vert)+' duplicate_vert: '+str(duplicate_vert))
-                        duplicate_ind[0].append(same_vert)
-                        duplicate_ind[1].append(duplicate_vert)
-            if not same_flag:
-                # vertices
-                self.verts[m_c].append(tuple(mvert.co))
-                count_vert += 1
-                # normals
-                if m_c == 0:
-                    tmp4 = [mvert.normal[0], mvert.normal[1],
-                            mvert.normal[2], 1.0]
-                    self.normals.append(tuple(tmp4))
-                    count_norm += 1
-                    # MIN & MAX PREPARE
-                if mvert.index == 0:
-                    min_m = copy.copy(mvert.co)
-                    max_m = copy.copy(mvert.co)
-                mi = 0
-                while mi < 3:
-                    if max_m[mi] < mvert.co[mi]:
-                        max_m[mi] = mvert.co[mi]
-                    if min_m[mi] > mvert.co[mi]:
-                        min_m[mi] = mvert.co[mi]
-                    mi += 1
-            if m_c == 0:
-                duplicate_vert += 1
-        self.fmin[m_c] = copy.copy(min_m)
-        self.fmax[m_c] = copy.copy(max_m)
-        # RADIUS
-        self.radius[m_c] = sqrt((self.fmax[m_c][0] - self.fmin[m_c][0]) ** 2 + (
-            self.fmax[m_c][1] - self.fmin[m_c][1]) ** 2 + (self.fmax[m_c][2] - self.fmin[m_c][2]) ** 2) / 2
-        # REAL CENTER
-        for mcntr in range(3):
-            tmp3[mcntr] = (self.fmin[m_c][mcntr] + self.fmax[m_c][mcntr]) / 2
-        self.center[m_c] = tuple(tmp3)
-        # MIN & MAX
-        for i in range(3):
-            self.fmin[m_c][i] -= self.center[m_c][i]
-            self.fmax[m_c][i] -= self.center[m_c][i]
-        if count_vert != 0 and m_c == 0:
-            self.header[5] = count_vert
-        # align vertices
-        if count_vert % 4 != 0:
-            v_restore = 4 - count_vert % 4
-        for mvert_restore in range(v_restore):
-            self.verts[m_c].append((0.0, 0.0, 0.0))
-            count_vert += 1
-        # if count_vert % 4 == 0 and m_c == 0:
-            #print('verts now: ' + str(count_vert) + ' added: ' + str(v_restore))
-        if m_c == 0:
-            self.header[0] = int(count_vert / 4)
-            # for i in range(len(duplicate_ind[0])):
-            #print('duplicate vertex: ' + str(duplicate_ind[0][i]) + '<=>' + str(duplicate_ind[1][i]))
-            if len(self.normals) % 4 != 0:
-                for v_norn_restore in range(4 - len(self.normals) % 4):
-                    # print ('len: '+str(len(self.normals))+'\tcount: '+str(count_norm))
-                    self.normals.append(
-                        copy.copy(self.normals[count_norm - 1]))
-                    count_norm += 1
-            self.header[1] = int(len(self.normals) / 4)
-            #print('normals: ' + str(len(self.normals)))
-            ind_ar = []
-            for mpoly in mesh.polygons:
-                # INDICES PREPARE
-                for poly_vrt in mpoly.vertices:
-                    same_flag = False
-                    # remove duplicate indices
-                    for dp_vrt in range(len(duplicate_ind[1])):
-                        if poly_vrt == duplicate_ind[1][dp_vrt]:
-                            same_flag = True
-                            ind_ar.append(duplicate_ind[0][dp_vrt])
-                            # print ('pl_vrt: '+str(poly_vrt)+' ->'+str(duplicate_ind[0][dp_vrt]))
-                    if not same_flag:
-                        ind_ar.append(poly_vrt)
-                    ind_count += 1
-            # UV COORDS PREPARE
-            uv_ar = []  # array with all t_coords
-            new_uv_ind = []
-            uv_counter = 0
-            for uv_act in mesh.uv_layers.active.data:  # get only active layer with uv_cords
-                uv_temp = [uv_act.uv[0], uv_act.uv[1]]
-                uv_ar.append(copy.copy(uv_temp))
-                if uv_temp not in self.t_coords:
-                    self.t_coords.append(copy.copy(uv_temp))
-                uv_counter += 1
-            self.header[2] = len(self.t_coords)
-            self.header[3] = ind_count
-            #for uv_ind1 in range(len(uv_ar)):  # get indicies of new t_coords array
-            for uv_ind1 in uv_ar:  # get indicies of new t_coords array
-                #for uv_ind2 in range(len(self.t_coords)):
-                for uv_ind2 in self.t_coords:
-                    #if uv_ar[uv_ind1] == self.t_coords[uv_ind2]:
-                    if uv_ind1 == uv_ind2:
-                        #new_uv_ind.append(uv_ind2)
-                        new_uv_ind.append(self.t_coords.index(uv_ind2))
-
-            # VERTEX COMPONENTS
-            for n_i in range(len(ind_ar)):
-                uv_ind = [ind_ar[n_i], new_uv_ind[n_i]]
-                print (uv_ind)
-                if uv_ind not in self.v_c:
-                    # print ('uv_temp: '+str(uv_temp))
-                    # try to change on tuple (tuple provide error)
-                    self.v_c.append(copy.copy(uv_ind))
-            #todo use other sort instead bubble sort
-            for bub in range(len(self.v_c)):
-                for buble in range(len(self.v_c) - 1):
-                    if self.v_c[buble][0] > self.v_c[buble + 1][0]:
-                        swap_pts = copy.copy(self.v_c[buble + 1])
-                        self.v_c[buble + 1] = copy.copy(self.v_c[buble])
-                        self.v_c[buble] = copy.copy(swap_pts)
-                    elif self.v_c[buble][0] == self.v_c[buble + 1][0]:
-                        if self.v_c[buble][1] > self.v_c[buble + 1][1]:
-                            swap_pts = copy.copy(self.v_c[buble + 1])
-                            self.v_c[buble + 1] = copy.copy(self.v_c[buble])
-                            self.v_c[buble] = copy.copy(swap_pts)
-            self.header[4] = len(self.v_c)
-            # INDICIES
-            #todo refactore
-            for mix in range(len(ind_ar)):
-                for mix1 in range(len(self.v_c)):
-                    if (ind_ar[mix] == self.v_c[mix1][0]) & (new_uv_ind[mix] == self.v_c[mix1][1]):
-                        self.indicies.append(mix1)
-                        break
-            # group of object & texture number
-            gt_object = {   'world': [22, 7], 
-                            'weapon': [19, 2], 
-                            'shop_w': [18, 2], 
-                            'quest': [17, 8],
-                            'quick': [17, 8],
-                            'loot': [18, 8]
-                            }
-            self.header[7] = gt_object[sc.UvType][0]
-            self.header[8] = gt_object[sc.UvType][1]
-            #print('group:' + str(self.header[7]) + ' t_number:' + str(self.header[8]))
-            # convert uv_type
-            #print('UvType: ' + str(sc.UvType))
-            if sc.UvType == 'shop_w':
-                uvt = 1
-            elif sc.UvType == 'quest' or sc.UvType == 'quick' or sc.UvType == 'loot':
-                uvt = 2
-            else:
-                uvt = 0
-            for uvt_i in range(uvt):
-                # for uvt_j in range(len(self.t_coords)):
-                #     self.t_coords[uvt_j][0] /= 2
-                #     self.t_coords[uvt_j][1] = 0.5 + self.t_coords[uvt_j][1] / 2
-                for uvConvert in self.t_coords:
-                    uvConvert[0] /= 2
-                    uvConvert[1] = 0.5 + uvConvert[1] / 2
-
-    def get_from_mesh_simple(self, start_mesh, sc):
-        for m_c in range(4):
-            mesh = detect_morph(start_mesh, 'MESH', m_c)
-            scale = sc.scalefig
+    def get_data_from_mesh(self, mName, scale):
+        """ 
+        Gets data from current mesh by meshname
+        """
+        sc = bpy.context.scene
+        for mesh_morph_component in range (8):
             count_vert = 0
             count_norm = 0
             v_restore = 0
@@ -580,80 +410,79 @@ class ei_mesh:
             duplicate_ind = [[], []]
             min_m = [0, 0, 0]
             max_m = [0, 0, 0]
+            mesh = detect_morph(mName, 'MESH', mesh_morph_component)
+            print ("cur mesh: " + mesh.name)
+            if mesh_morph_component < 4:
+                simple_morph_scale = 1
+            else:
+                simple_morph_scale = scale
 
             # VERTICES & NORMALS
+            print ("verts start")
             for mvert in mesh.vertices:
                 same_flag = False
+                #may be change this?! ===>
                 for same_vert in range(count_vert):
-                    if mvert.co == mesh.vertices[same_vert].co:
+                    #if mvert.co == mesh.vertices[same_vert].co:
+                    if mvert.co == self.verts[mesh_morph_component][same_vert]:
                         same_flag = True
-                        if m_c == 0:
+                        if mesh_morph_component == 0:
                             # print ('same_vert: '+str(same_vert)+' duplicate_vert: '+str(duplicate_vert))
                             duplicate_ind[0].append(same_vert)
                             duplicate_ind[1].append(duplicate_vert)
                 if not same_flag:
                     # vertices
-                    self.verts[m_c].append(tuple(mvert.co))
-                    for i in range(3):
-                        tmp3[i] = mvert.co[i] * scale
-                    self.verts[m_c + 4].append(copy.copy(tuple(tmp3)))
+                    #self.verts[mesh_morph_component].append(tuple(mvert.co))
+                    print ("mvert: " + str(mvert.co) + " tuple: " + str(tuple(mvert.co*simple_morph_scale)))
+                    self.verts[mesh_morph_component].append(tuple(mvert.co*simple_morph_scale))
                     count_vert += 1
+                #<===
                     # normals
-                    if m_c == 0:
+                    if mesh_morph_component == 0:
                         tmp4 = [mvert.normal[0], mvert.normal[1],
                                 mvert.normal[2], 1.0]
                         self.normals.append(tuple(tmp4))
                         count_norm += 1
-            # MIN & MAX PREPARE
+                        # MIN & MAX PREPARE
                     if mvert.index == 0:
                         min_m = copy.copy(mvert.co)
                         max_m = copy.copy(mvert.co)
-                    for mi in range(3):
+                    mi = 0
+                    while mi < 3:
                         if max_m[mi] < mvert.co[mi]:
                             max_m[mi] = mvert.co[mi]
                         if min_m[mi] > mvert.co[mi]:
                             min_m[mi] = mvert.co[mi]
-                if m_c == 0:
+                        mi += 1
+                if mesh_morph_component == 0:
                     duplicate_vert += 1
-            self.fmin[m_c] = copy.copy(min_m)
-            self.fmax[m_c] = copy.copy(max_m)
-            for i in range(3):
-                tmp3[i] = min_m[i] * scale
-            self.fmin[m_c + 4] = copy.copy(tmp3)
-            for i in range(3):
-                tmp3[i] = max_m[i] * scale
-            self.fmax[m_c + 4] = copy.copy(tmp3)
+            print ("verts end")
+            self.fmin[mesh_morph_component] = copy.copy(min_m)
+            self.fmax[mesh_morph_component] = copy.copy(max_m)
             # RADIUS
-            self.radius[m_c] = sqrt((self.fmax[m_c][0] - self.fmin[m_c][0]) ** 2
-                                    + (self.fmax[m_c][1] -
-                                       self.fmin[m_c][1]) ** 2
-                                    + (self.fmax[m_c][2] - self.fmin[m_c][2]) ** 2) / 2
-            self.radius[m_c + 4] = copy.copy(self.radius[m_c] * scale)
+            self.radius[mesh_morph_component] = sqrt(
+                (self.fmax[mesh_morph_component][0] - self.fmin[mesh_morph_component][0]) ** 2 +
+                (self.fmax[mesh_morph_component][1] - self.fmin[mesh_morph_component][1]) ** 2 + 
+                (self.fmax[mesh_morph_component][2] - self.fmin[mesh_morph_component][2]) ** 2) / 2
             # REAL CENTER
-            for mcntr in range(3):
-                tmp3[mcntr] = (self.fmin[m_c][mcntr] +
-                               self.fmax[m_c][mcntr]) / 2
-            self.center[m_c] = tuple(tmp3)
-            self.center[m_c + 4] = tuple([tmp3[0] *
-                                          scale, tmp3[1] * scale, tmp3[2] * scale])
-            #MIN & MAX
             for i in range(3):
-                self.fmin[m_c][i] -= self.center[m_c][i]
-                self.fmin[m_c + 4][i] -= self.center[m_c + 4][i]
-                self.fmax[m_c][i] -= self.center[m_c][i]
-                self.fmax[m_c + 4][i] -= self.center[m_c + 4][i]
-            if count_vert != 0 and m_c == 0:
+                tmp3[i] = (self.fmin[mesh_morph_component][i] + self.fmax[mesh_morph_component][i]) / 2
+            self.center[mesh_morph_component] = tuple(tmp3)
+            # MIN & MAX
+            for i in range(3):
+                self.fmin[mesh_morph_component][i] -= self.center[mesh_morph_component][i]
+                self.fmax[mesh_morph_component][i] -= self.center[mesh_morph_component][i]
+            if count_vert != 0 and mesh_morph_component == 0:
                 self.header[5] = count_vert
             # align vertices
             if count_vert % 4 != 0:
                 v_restore = 4 - count_vert % 4
             for mvert_restore in range(v_restore):
-                self.verts[m_c].append((0.0, 0.0, 0.0))
-                self.verts[m_c + 4].append((0.0, 0.0, 0.0))
+                self.verts[mesh_morph_component].append((0.0, 0.0, 0.0))
                 count_vert += 1
-            # if count_vert % 4 == 0 and m_c == 0:
+            # if count_vert % 4 == 0 and mesh_morph_component == 0:
                 #print('verts now: ' + str(count_vert) + ' added: ' + str(v_restore))
-            if m_c == 0:
+            if mesh_morph_component == 0:
                 self.header[0] = int(count_vert / 4)
                 # for i in range(len(duplicate_ind[0])):
                 #print('duplicate vertex: ' + str(duplicate_ind[0][i]) + '<=>' + str(duplicate_ind[1][i]))
@@ -680,7 +509,7 @@ class ei_mesh:
                             ind_ar.append(poly_vrt)
                         ind_count += 1
                 # UV COORDS PREPARE
-                uv_ar = []
+                uv_ar = []  # array with all t_coords
                 new_uv_ind = []
                 uv_counter = 0
                 for uv_act in mesh.uv_layers.active.data:  # get only active layer with uv_cords
@@ -691,17 +520,24 @@ class ei_mesh:
                     uv_counter += 1
                 self.header[2] = len(self.t_coords)
                 self.header[3] = ind_count
-                # get indicies of new t_coords array
-                for uv_ind1 in range(len(uv_ar)):
-                    for uv_ind2 in range(len(self.t_coords)):
-                        if uv_ar[uv_ind1] == self.t_coords[uv_ind2]:
-                            new_uv_ind.append(uv_ind2)
+                #for uv_ind1 in range(len(uv_ar)):  # get indicies of new t_coords array
+                for uv_ind1 in uv_ar:  # get indicies of new t_coords array
+                    #for uv_ind2 in range(len(self.t_coords)):
+                    for uv_ind2 in self.t_coords:
+                        #if uv_ar[uv_ind1] == self.t_coords[uv_ind2]:
+                        if uv_ind1 == uv_ind2:
+                            #new_uv_ind.append(uv_ind2)
+                            new_uv_ind.append(self.t_coords.index(uv_ind2))
+
                 # VERTEX COMPONENTS
                 for n_i in range(len(ind_ar)):
-                    uv_temp = [ind_ar[n_i], new_uv_ind[n_i]]
-                    if uv_temp not in self.v_c:
+                    uv_ind = [ind_ar[n_i], new_uv_ind[n_i]]
+                    if uv_ind not in self.v_c:
+                        # print ('uv_temp: '+str(uv_temp))
                         # try to change on tuple (tuple provide error)
-                        self.v_c.append(copy.copy(uv_temp))
+                        self.v_c.append(copy.copy(uv_ind))
+                print ("we are here #1")
+                #todo use other sort instead bubble sort
                 for bub in range(len(self.v_c)):
                     for buble in range(len(self.v_c) - 1):
                         if self.v_c[buble][0] > self.v_c[buble + 1][0]:
@@ -711,23 +547,25 @@ class ei_mesh:
                         elif self.v_c[buble][0] == self.v_c[buble + 1][0]:
                             if self.v_c[buble][1] > self.v_c[buble + 1][1]:
                                 swap_pts = copy.copy(self.v_c[buble + 1])
-                                self.v_c[buble +
-                                         1] = copy.copy(self.v_c[buble])
+                                self.v_c[buble + 1] = copy.copy(self.v_c[buble])
                                 self.v_c[buble] = copy.copy(swap_pts)
+                print ("we are here #2")
                 self.header[4] = len(self.v_c)
                 # INDICIES
+                #todo refactore
                 for mix in range(len(ind_ar)):
                     for mix1 in range(len(self.v_c)):
                         if (ind_ar[mix] == self.v_c[mix1][0]) & (new_uv_ind[mix] == self.v_c[mix1][1]):
                             self.indicies.append(mix1)
                             break
                 # group of object & texture number
-                gt_object = {'world': [22, 7],
-                             'weapon': [19, 2],
-                             'shop_w': [18, 2],
-                             'quest': [17, 8],
-                             'quick': [17, 8],
-                             'loot': [18, 8]}
+                gt_object = {   'world': [22, 7], 
+                                'weapon': [19, 2], 
+                                'shop_w': [18, 2], 
+                                'quest': [17, 8],
+                                'quick': [17, 8],
+                                'loot': [18, 8]
+                                }
                 self.header[7] = gt_object[sc.UvType][0]
                 self.header[8] = gt_object[sc.UvType][1]
                 #print('group:' + str(self.header[7]) + ' t_number:' + str(self.header[8]))
@@ -740,10 +578,12 @@ class ei_mesh:
                 else:
                     uvt = 0
                 for uvt_i in range(uvt):
-                    for uvt_j in range(len(self.t_coords)):
-                        self.t_coords[uvt_j][0] /= 2
-                        self.t_coords[uvt_j][1] = 0.5 + \
-                            self.t_coords[uvt_j][1] / 2
+                    # for uvt_j in range(len(self.t_coords)):
+                    #     self.t_coords[uvt_j][0] /= 2
+                    #     self.t_coords[uvt_j][1] = 0.5 + self.t_coords[uvt_j][1] / 2
+                    for uvConvert in self.t_coords:
+                        uvConvert[0] /= 2
+                        uvConvert[1] = 0.5 + uvConvert[1] / 2
 
     def write_in_file(self):
         fg = open(self.path, 'wb')
@@ -893,34 +733,23 @@ class EIExport(bpy.types.Operator):
 
         export_lnk(path_file)
 
+        scale = 1
+        if scn.MorphType != 'hrd':
+            scale = scn.scalefig
         bpy.ops.object.select_all(action='DESELECT')
-        fdir = os.path.dirname(path_file)
+        folder = os.path.dirname(path_file)
         for mesh in bpy.data.meshes:
             if mesh.name[0:2] not in morph_comp.values():
                 #print(str(mesh.name) + ': start fig export ===>')
-                if scn.MorphType == 'hrd' and check_hard_morphing(mesh.name):
-                    cur_m = ei_mesh()
-                    cur_m.name = mesh.name
-                    cur_m.path = fdir + '\\' + mesh.name + '.fig'
-                    for i in range(8):
-                        cur_m.get_from_mesh(
-                            bpy.data.meshes[morph_comp[i] + mesh.name], scn, i)
-                    cur_m.write_in_file()
-                if scn.MorphType == 'smpl':
-                    cur_m = ei_mesh()
-                    cur_m.name = mesh.name
-                    cur_m.path = fdir + '\\' + mesh.name + '.fig'
-                    cur_m.get_from_mesh_simple(mesh, scn)
-                    cur_m.write_in_file()
-                if scn.MorphType == 'non':
-                    cur_m = ei_mesh()
-                    cur_m.name = mesh.name
-                    cur_m.path = fdir + '\\' + mesh.name + '.fig'
-                    for i in range(8):
-                        cur_m.get_from_mesh(mesh, scn, i)
-                    cur_m.write_in_file()
+                cur_m = ei_mesh()
+                cur_m.name = mesh.name
+                #>>>>>TODO change to os.path...
+                cur_m.path = folder + '\\' + mesh.name + '.fig'
+                cur_m.get_data_from_mesh(mesh.name, scale)
+                cur_m.write_in_file()
                 #print(str(mesh.name) + ' <=== finished fig export')
         for obj in bpy.data.objects:
+            #>>>>>TODO make one func instead depending on morph type
             if obj.name[0:2] not in morph_comp.values():
                 print(str(obj.name) + ': start bon export ===>')
                 if scn.MorphType == 'hrd' and check_hard_morphing(obj.name):
@@ -936,7 +765,7 @@ class EIExport(bpy.types.Operator):
                     cur_b.name = obj.name
                     cur_b.path = fdir + '\\' + obj.name + '.bon'
                     for morph in range(4):
-                        ob = detect_morph(obj, 'OBJECT', morph)
+                        ob = detect_morph(obj.name, 'OBJECT', morph)
                         cur_b.get_pos_simple(ob, morph, scn.scalefig)
                     cur_b.write_pos()
                 if scn.MorphType == 'non':
@@ -963,17 +792,13 @@ class ChooseDir(bpy.types.Operator):
     directory = bpy.props.StringProperty(subtype='DIR_PATH')
 
     def execute(self, context):
-        #print ('dialog run')
         bpy.context.scene.DestinationDir = self.directory
-        #bpy.context.scene.DestinationDir = 'hello'
-        # print(self.directory)
         return {'FINISHED'}
 
     def invoke(self, context, event):
         wm = context.window_manager
         wm.fileselect_add(self)
         return {"RUNNING_MODAL"}
-        # return wm.invoke_props_dialog (self)
 
 
 class ei_export_only_lnk(bpy.types.Operator):
@@ -983,8 +808,7 @@ class ei_export_only_lnk(bpy.types.Operator):
 
     def execute(self, context):
         clean()
-        export_lnk(bpy.context.scene.DestinationDir +
-                   bpy.context.scene.LnkName)
+        export_lnk(bpy.context.scene.DestinationDir + bpy.context.scene.LnkName)
         self.report({'INFO'}, "Lnk exported")
         return {"FINISHED"}
 
@@ -997,36 +821,21 @@ class ei_export_only_figs(bpy.types.Operator):
         #print ('export fig')
         clean()
         scn = bpy.context.scene
-        sel_obj = bpy.context.selected_objects
-        if sel_obj:
-            for obj in sel_obj:
-                if obj.data.name[0:2] not in morph_comp.values():
-                    # print(str(mesh.name) + ': start fig export ===>')
-                    format_obj(obj)
-                    mesh = bpy.data.meshes[obj.data.name]
-                    if scn.MorphType == 'hrd' and check_hard_morphing(mesh.name):
-                        cur_m = ei_mesh()
-                        cur_m.name = mesh.name
-                        cur_m.path = scn.DestinationDir + '\\' + mesh.name + '.fig'
-                        for i in range(8):
-                            cur_m.get_from_mesh(
-                                bpy.data.meshes[morph_comp[i] + mesh.name], scn, i)
-                        cur_m.write_in_file()
-                    if scn.MorphType == 'smpl':
-                        cur_m = ei_mesh()
-                        cur_m.name = mesh.name
-                        cur_m.path = scn.DestinationDir + '\\' + mesh.name + '.fig'
-                        cur_m.get_from_mesh_simple(mesh, scn)
-                        cur_m.write_in_file()
-                    if scn.MorphType == 'non':
-                        cur_m = ei_mesh()
-                        cur_m.name = mesh.name
-                        cur_m.path = scn.DestinationDir + '\\' + mesh.name + '.fig'
-                        for i in range(8):
-                            cur_m.get_from_mesh(mesh, scn, i)
-                        cur_m.write_in_file()
-                        # print(str(mesh.name) + ' <=== finished fig export')
-                    self.report({'INFO'}, "Fig's exported")
+        scale = 1
+        if scn.MorphType != 'hrd':
+            scale = scn.scalefig
+        for obj in bpy.context.selected_objects:
+            if obj.data.name[0:2] not in morph_comp.values():
+                # print(str(mesh.name) + ': start fig export ===>')
+                format_obj(obj)
+                mesh = bpy.data.meshes[obj.data.name]
+                cur_m = ei_mesh()
+                cur_m.name = mesh.name
+                cur_m.path = scn.DestinationDir + '\\' + mesh.name + '.fig'
+                cur_m.get_data_from_mesh(bpy.data.meshes[morph_comp[i] + mesh.name].name, scale)
+                cur_m.write_in_file()
+                # print(str(mesh.name) + ' <=== finished fig export')
+                self.report({'INFO'}, "Fig's exported")
         return {"FINISHED"}
 
 
@@ -1037,10 +846,10 @@ class ei_export_only_bons(bpy.types.Operator):
     def execute(self, context):
         clean()
         scn = bpy.context.scene
-        sel_obj = bpy.context.selected_objects
-        for obj in sel_obj:
+        for obj in bpy.context.selected_objects:
             if obj.name[0:2] not in morph_comp.values():
                 #print(str(obj.name) + ': start bon export ===>')
+                #>>>>>TODO change func to one
                 if scn.MorphType == 'hrd' and check_hard_morphing(obj.name):
                     cur_b = ei_bon()
                     cur_b.name = obj.name
@@ -1054,7 +863,7 @@ class ei_export_only_bons(bpy.types.Operator):
                     cur_b.name = obj.name
                     cur_b.path = scn.DestinationDir + '\\' + obj.name + '.bon'
                     for morph in range(4):
-                        ob = detect_morph(obj, 'OBJECT', morph)
+                        ob = detect_morph(obj.name, 'OBJECT', morph)
                         cur_b.get_pos_simple(ob, morph, scn.scalefig)
                     cur_b.write_pos()
                 if scn.MorphType == 'non':
@@ -1087,25 +896,28 @@ def add_morph_comp(act_obj, mc):
                 new_obj.layers[m] = True
                 new_obj.layers[0] = False
     else:
-        print(act_obj.name +
-              ' it is a bad object to add morph component, try another object')
+        print(act_obj.name + ' it is a bad object to add morph component, try another object')
 
 
 def morphing_list(self, context):
-    list1 = [('s~', 'Strength', 'Strength component', 1),
-             ('d~', 'Dexterity', 'Dexterity component', 2),
-             ('u~', 'Unique', 'Mean between Strength & Dexterity components in one object', 3),
-             ('b~', 'Scaled', 'Scaled base figure', 4),
-             ('p~', 'Power', 'Scaled strength component', 5),
-             ('g~', 'Grace', 'Scaled dexterity component', 6),
-             ('c~', 'Common', 'Common scaled strength & scaled dexterity components in one object', 7)]
-    list2 = [('s~', 'Strength', 'Strength component', 1),
-             ('d~', 'Dexterity', 'Dexterity component', 2),
-             ('u~', 'Unique', 'Mean between Strength & Dexterity components in one object', 3)]
+    simple_morph_list = [
+            ('s~', 'Strength', 'Strength component', 1),
+            ('d~', 'Dexterity', 'Dexterity component', 2),
+            ('u~', 'Unique', 'Mean between Strength & Dexterity components in one object', 3),
+            ('b~', 'Scaled', 'Scaled base figure', 4),
+            ('p~', 'Power', 'Scaled strength component', 5),
+            ('g~', 'Grace', 'Scaled dexterity component', 6),
+            ('c~', 'Common', 'Common scaled strength & scaled dexterity components in one object', 7)
+            ]
+    hard_morph_list = [
+            ('s~', 'Strength', 'Strength component', 1),
+            ('d~', 'Dexterity', 'Dexterity component', 2),
+            ('u~', 'Unique', 'Mean between Strength & Dexterity components in one object', 3)
+            ]
     if context.scene.MorphType == 'hrd':
-        return list1
+        return simple_morph_list
     else:
-        return list2
+        return hard_morph_list
 
 
 def calculate_mesh(self, context):
@@ -1167,6 +979,10 @@ class refresh_test_table(bpy.types.Operator):
             bon_table.clear()
         toObjectMode()
 
+        #find base objects
+        scale = 1
+        if scn.MorphType != 'hrd':
+            scale = scn.scalefig
         for obj in bpy.data.objects:
             if obj.layers[0] and not obj.hide and obj.name[0:2] not in morph_comp.values():
                 mesh_list.append(morph_comp[8] + obj.data.name)
@@ -1179,16 +995,9 @@ class refresh_test_table(bpy.types.Operator):
             cur_m = ei_mesh()
             cur_m.name = test_mesh
             mesh = bpy.data.meshes[test_mesh[2:]]
-            #todo make 1 function for get all meshes with morphing
-            if scn.MorphType == 'hrd' and check_hard_morphing(mesh.name):
-                for i in range(8):
-                    cur_m.get_from_mesh(bpy.data.meshes[morph_comp[i] + mesh.name], scn, i)
-
-            if scn.MorphType == 'smpl':
-                cur_m.get_from_mesh_simple(mesh, scn)
-            if scn.MorphType == 'non':
-                for i in range(8):
-                    cur_m.get_from_mesh(mesh, scn, i)
+            
+            print ("name: " + mesh.name + " scale: " + str(scale))
+            cur_m.get_data_from_mesh(mesh.name, scale)
             fig_table[test_mesh] = cur_m
 
         for test_obj in pos_list:
@@ -1196,12 +1005,13 @@ class refresh_test_table(bpy.types.Operator):
             #print ('test obj: '+test_obj)
             cur_b.name = test_obj
             obj = bpy.data.objects[test_obj[2:]]
+            #>>>>>>TODO make one func instead depending on morph type
             if scn.MorphType == 'hrd' and check_hard_morphing(obj.name):
                 for morph in range(8):
                     cur_b.get_pos(bpy.data.objects[morph_comp[morph] + obj.name], morph)
             if scn.MorphType == 'smpl':
                 for morph in range(4):
-                    ob = detect_morph(obj, 'OBJECT', morph)
+                    ob = detect_morph(obj.name, 'OBJECT', morph)
                     #print ('name: '+str(cur_b.name)+' '+str(cur_b.pos[0]))
                     cur_b.get_pos_simple(ob, morph, scn.scalefig)
             if scn.MorphType == 'non':
@@ -1280,8 +1090,7 @@ def create_hierarchy(lnks):
             try:
                 bpy.data.objects[k].parent = bpy.data.objects[lnks[k]]
             except KeyError:
-                print(
-                    str(k) + ': object not found in scene, but found in links of hierarchy')
+                print(str(k) + ': object not found in scene, but found in links of hierarchy')
 
 
 class EIImport(bpy.types.Operator):
