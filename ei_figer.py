@@ -136,7 +136,7 @@ class OperatorPanel(bpy.types.Panel):
         layout.prop(context.scene, "MeshHeight")
         layout.label(text="~~~~~~operations~~~~~~")
         #scene delete
-        layout.operator("object.clearlayer", text="clear layer")
+        layout.operator("object.clearscene", text="clear scene")
         #<<uv>>
         row = layout.row()
         split = row.split(percentage=0.7)
@@ -208,11 +208,13 @@ class OperatorPanel(bpy.types.Panel):
 #         layout.label(text="\.O./")
 
 
-def layer_clear():
+def scene_clear():
     """
-    deletes objects and meshes data from current layer
+    deletes objects and meshes data from scene
     """
+    bpy.context.scene.layers = [i == 1 for i in range(20)]
     for obj in bpy.data.objects:
+        obj.layers = [i == 1 for i in range(20)]
         obj.select = True
     bpy.ops.object.delete()
 
@@ -264,42 +266,26 @@ def detect_morph(m_name, obj_type, morph_id):
     """
     finds any morphing components in scene
     """
-    if obj_type == 'OBJECT':
-        try:
+    try:
+        if obj_type == 'OBJECT':
             morph = bpy.data.objects[MORPH_COMP[morph_id] + m_name]
-        except KeyError:
-            if morph_id == 1:
-                morph = detect_morph(m_name, obj_type, 0)
-            if morph_id == 2:
-                morph = detect_morph(m_name, obj_type, 0)
-            if morph_id == 3:
-                morph = detect_morph(m_name, obj_type, 1)
-            if morph_id == 4:
-                morph = detect_morph(m_name, obj_type, 0)
-            if morph_id == 5:
-                morph = detect_morph(m_name, obj_type, 1)
-            if morph_id == 6:
-                morph = detect_morph(m_name, obj_type, 2)
-            if morph_id == 7:
-                morph = detect_morph(m_name, obj_type, 3)
-    else:
-        try:
+        else:
             morph = bpy.data.meshes[MORPH_COMP[morph_id] + m_name]
-        except KeyError:
-            if morph_id == 1:
-                morph = detect_morph(m_name, obj_type, 0)
-            if morph_id == 2:
-                morph = detect_morph(m_name, obj_type, 0)
-            if morph_id == 3:
-                morph = detect_morph(m_name, obj_type, 1)
-            if morph_id == 4:
-                morph = detect_morph(m_name, obj_type, 0)
-            if morph_id == 5:
-                morph = detect_morph(m_name, obj_type, 1)
-            if morph_id == 6:
-                morph = detect_morph(m_name, obj_type, 2)
-            if morph_id == 7:
-                morph = detect_morph(m_name, obj_type, 3)
+    except KeyError:
+        if morph_id == 1:
+            morph = detect_morph(m_name, obj_type, 0)
+        if morph_id == 2:
+            morph = detect_morph(m_name, obj_type, 0)
+        if morph_id == 3:
+            morph = detect_morph(m_name, obj_type, 1)
+        if morph_id == 4:
+            morph = detect_morph(m_name, obj_type, 0)
+        if morph_id == 5:
+            morph = detect_morph(m_name, obj_type, 1)
+        if morph_id == 6:
+            morph = detect_morph(m_name, obj_type, 2)
+        if morph_id == 7:
+            morph = detect_morph(m_name, obj_type, 3)
     return morph
 
 
@@ -1026,7 +1012,6 @@ class RefreshTestTable(bpy.types.Operator):
         create_hierarchy(tu_dict)
         for p_ind in POS_LIST:
             BON_TABLE[p_ind].set_pos('non')
-        #>>>>>TODO check this?!
         calculate_mesh(self, context)
         return {'FINISHED'}
 
@@ -1055,13 +1040,13 @@ class MorphOperators(bpy.types.Operator):
         morph_lnk.clear()
         return {'FINISHED'}
 
-class ClearLayer(bpy.types.Operator):
+class ClearScene(bpy.types.Operator):
     bl_label = "Del all"
-    bl_idname = "object.clearlayer"
-    bl_description = "Delete all objects and meshes from current layer"
+    bl_idname = "object.clearscene"
+    bl_description = "Delete all objects and meshes from scene"
 
     def execute(self, context):
-        layer_clear()
+        scene_clear()
         return {'FINISHED'}
 
 def ei_set_group(self, context):
