@@ -14,15 +14,15 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 bl_info = {
-    "name": "EI figer",
-    "author": "konstvest",
-    "version": (2, 6),
-    "blender": (2, 79, 0),
-    "location": "",
-    "description": "Addon for import-export model Evil Islands <-> Blender (without animations)",
-    "wiki_url": "",
-    "tracker_url": "https://github.com/konstvest/ei_figer",
-    "category": "Import-Export"}
+    'name': 'EI figer',
+    'author': 'konstvest',
+    'version': (2, 6),
+    'blender': (2, 79, 0),
+    'location': '',
+    'description': 'Addon for import-export model Evil Islands <-> Blender (without animations)',
+    'wiki_url': '',
+    'tracker_url': 'https://github.com/konstvest/ei_figer',
+    'category': 'Import-Export'}
 
 import copy
 import os
@@ -51,167 +51,167 @@ MORPH_COMP = {
     8: 'T~'
     }
 
-QUEST = re.compile("initqu[0-9]+item")              # initqu%ditem
-QUICK = re.compile("initqi[0-9]+item")              # initqi%ditem
-WEAPON = re.compile("initwe[a-zA-Z]+[0-9]+weapon")  # initwe%s%dweapon
-ARMOR = re.compile("initar[a-zA-Z]+[0-9]+armor")    # initar%s%darmor
-LOOT = re.compile("initlitr[0-9]+item")             # initlitr%ditem
-MATERIAL = re.compile("initlimt[0-9]+item")         # initlimt%ditem
+QUEST_RE = re.compile('initqu[0-9]+item')              # initqu%ditem
+QUICK_RE = re.compile('initqi[0-9]+item')              # initqi%ditem
+WEAPON_RE = re.compile('initwe[a-zA-Z]+[0-9]+weapon')  # initwe%s%dweapon
+HELM_RE = re.compile('initarhl[0-9]+armor')            # initarhl%darmor
+LOOT_RE = re.compile('initlitr[0-9]+item')             # initlitr%ditem
+MATERIAL_RE = re.compile('initlimt[0-9]+item')         # initlimt%ditem
 
 
 class ImportExportPanel(bpy.types.Panel):
-    bl_label = "import-export"
+    bl_label = 'import-export'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'EI_Tools'
 
     def draw_header(self, context):
         layout = self.layout
-        layout.label(text="", icon="PACKAGE")
+        layout.label(text='', icon='PACKAGE')
 
     def draw(self, context):
         layout = self.layout
         #import
-        layout.operator("object.eimodelimport", text="Import")
+        layout.operator('object.eimodelimport', text='Import')
         #export
-        layout.label(text="~~~~~~~export~~~~~~~")
+        layout.label(text='~~~~~~~export~~~~~~~')
         row = layout.row()
         row = row.split(percentage=0.8)
-        row.prop(context.scene, "DestinationDir")
-        row.operator("object.choose_dir", text="...")
+        row.prop(context.scene, 'DestinationDir')
+        row.operator('object.choose_dir', text='...')
         row = layout.row()
         row = row.split(percentage=0.75)
-        row.prop(context.scene, "LnkName")
-        row.operator("object.export_only_lnk", text="*.lnk")
+        row.prop(context.scene, 'LnkName')
+        row.operator('object.export_only_lnk', text='*.lnk')
         row = layout.row()
         row = row.split()
-        row.operator("object.export_only_fig", text="*.fig's")
-        row.operator("object.export_only_bon", text="*.bon's")
-        #layout.operator("object.knopo4ka", text="start button   :)")
+        row.operator('object.export_only_fig', text="*.fig's")
+        row.operator('object.export_only_bon', text="*.bon's")
+        #layout.operator('object.knopo4ka', text='start button   :)')
 
 
 class OperatorPanel(bpy.types.Panel):
-    bl_label = "Operations & options"
+    bl_label = 'Operations & options'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'EI_Tools'
 
     def draw_header(self, context):
         layout = self.layout
-        layout.label(text="", icon="MOD_SCREW")
+        layout.label(text='', icon='MOD_SCREW')
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="~~~~~~~options~~~~~~~")
+        layout.label(text='~~~~~~~options~~~~~~~')
         row = layout.row()
         split = row.split(percentage=0.35)
         left = split.column()
         #morphing
-        left.label(text="Morphing")
+        left.label(text='Morphing')
         right = split.column()
-        right.prop(context.scene, "MorphType")
+        right.prop(context.scene, 'MorphType')
         if context.scene.MorphType != 'non':
             row = layout.row()
             split = row.split(percentage=0.6)
             left = split.column()
             right = split.column()
-            left.prop(context.scene, "MorphComp")
-            right.operator("object.addmorphcomp", text="Add morph comp")
+            left.prop(context.scene, 'MorphComp')
+            right.operator('object.addmorphcomp', text='Add morph comp')
             #scaling
             if context.scene.MorphType == 'smpl':
-                layout.prop(context.scene, "scalefig")
+                layout.prop(context.scene, 'scalefig')
         #object parameters
         if len(context.selected_objects) >= 1:
             row = layout.row()
             split = row.split(percentage=0.5)
             left = split.column()
-            left.prop(context.object, "ei_group")
+            left.prop(context.object, 'ei_group')
             right = split.column()
-            right.prop(context.object, "t_number")
-        layout.label(text="~~~~~~~test unit~~~~~~~")
+            right.prop(context.object, 't_number')
+        layout.label(text='~~~~~~~test unit~~~~~~~')
         #test unit
-        layout.operator("object.refresh_test_unit", text="test unit",)
-        layout.prop(context.scene, "MeshStr")
-        layout.prop(context.scene, "MeshDex")
-        layout.prop(context.scene, "MeshHeight")
-        layout.label(text="~~~~~~operations~~~~~~")
+        layout.operator('object.refresh_test_unit', text='test unit',)
+        layout.prop(context.scene, 'MeshStr')
+        layout.prop(context.scene, 'MeshDex')
+        layout.prop(context.scene, 'MeshHeight')
+        layout.label(text='~~~~~~operations~~~~~~')
         #scene delete
-        layout.operator("object.clearscene", text="clear scene")
+        layout.operator('object.clearscene', text='clear scene')
         #<<uv>>
         row = layout.row()
         split = row.split(percentage=0.7)
         left = split.column()
         lsplit = left.split(percentage=0.5)
         lleft = lsplit.column()
-        lleft.operator("object.packuvcoords", text="<<")
+        lleft.operator('object.packuvcoords', text='<<')
         rleft = lsplit.column()
-        rleft.label(text="uv_coords")
+        rleft.label(text='uv_coords')
         right = split.column()
-        right.operator("object.unpackuvcoords", text=">>")
+        right.operator('object.unpackuvcoords', text='>>')
         #type of select
         row = layout.row()
         split = row.split(percentage=0.3)
         left = split.column()
-        left.label(text="select")
+        left.label(text='select')
         right = split.column()
-        right.prop(context.scene, "selectType")
-        if context.scene.selectType == "mrph":
+        right.prop(context.scene, 'selectType')
+        if context.scene.selectType == 'mrph':
             row = layout.row()
             split = row.split(percentage=0.8)
             left = split.column()
-            left.label(text="click ok ;)")
+            left.label(text='click ok ;)')
             right = split.column()
-            right.operator("object.applyselect", text="ok")
-        if context.scene.selectType == "grp" or context.scene.selectType == "txtrnmbr":
+            right.operator('object.applyselect', text='ok')
+        if context.scene.selectType == 'grp' or context.scene.selectType == 'txtrnmbr':
             row = layout.row()
             split = row.split(percentage=0.85)
             left = split.column()
             right = split.column()  #ok
-            right.operator("object.applyselect", text="ok")
+            right.operator('object.applyselect', text='ok')
 
             split1 = left.split(percentage=0.72)
             left1 = split1.column()
             right1 = split1.column() #max
-            right1.prop(context.scene, "selectMax")
+            right1.prop(context.scene, 'selectMax')
             split2 = left1.split(percentage=0.49)
             left2 = split2.column() #min
-            left2.prop(context.scene, "selectMin")
+            left2.prop(context.scene, 'selectMin')
             right2 = split2.column()
-            if context.scene.selectType == "grp":
-                right2.label(text="group")
+            if context.scene.selectType == 'grp':
+                right2.label(text='group')
             else:
-                right2.label(text="t_number")
+                right2.label(text='t_number')
         #uv layers
         row = layout.row()
         split = row.split(percentage=0.7)
         left = split.column()
         right = split.column()
-        left.prop(context.scene, "sameUV")
-        right.operator("object.setsameuvlayername", text="apply")
+        left.prop(context.scene, 'sameUV')
+        right.operator('object.setsameuvlayername', text='apply')
 
 
 #>>>>>TODO animation import for human and export animation (will be able in next versions)
 # class animation_panel(bpy.types.Panel):
-#     bl_label = "animations"
+#     bl_label = 'animations'
 #     bl_space_type = 'VIEW_3D'
 #     bl_region_type = 'TOOLS'
 #     bl_category = 'EI_Tools'
 
 #     def draw_header(self, context):
 #         layout = self.layout
-#         layout.label(text="", icon="POSE_DATA")
+#         layout.label(text='', icon='POSE_DATA')
 
 #     def draw(self, context):
 #         layout = self.layout
-#         layout.label(text="/~~animation zone~~/")
-#         layout.operator("object.eimanimationimport", text="Import animation")
-#         layout.label(text="\.O./")
+#         layout.label(text='/~~animation zone~~/')
+#         layout.operator('object.eimanimationimport', text='Import animation')
+#         layout.label(text='\.O./')
 
 
 def scene_clear():
-    """
+    '''
     deletes objects and meshes data from scene
-    """
+    '''
     bpy.context.scene.layers = [i == 1 for i in range(20)]
     for obj in bpy.data.objects:
         obj.layers = [i == 1 for i in range(20)]
@@ -219,9 +219,9 @@ def scene_clear():
     bpy.ops.object.delete()
 
 def clean():
-    """
+    '''
     cleans trash from objects and meshes data from scene without reloading scene
-    """
+    '''
     for rem_mesh in bpy.data.meshes:
         if rem_mesh.users == 0:
             bpy.data.meshes.remove(rem_mesh)
@@ -232,17 +232,17 @@ def clean():
 
 #todo lock object after format
 def format_obj(cur_obj):
-    """
+    '''
     checks transformation of current object and triangulate it
-    """
+    '''
     quat_rot = cur_obj.rotation_quaternion
     sca = cur_obj.scale
     bpy.ops.object.rotation_clear()
     bpy.ops.object.scale_clear()
     if quat_rot != cur_obj.rotation_quaternion:
-        print ("WARNING: return operation and apply rotation to " + cur_obj.name)
+        print ('WARNING: return operation and apply rotation to ' + cur_obj.name)
     if sca != cur_obj.scale:
-        print ("WARNING: return operation and apply scale to " + cur_obj.name)
+        print ('WARNING: return operation and apply scale to ' + cur_obj.name)
 
     # trianfulate obj
     mesh = cur_obj.data
@@ -253,9 +253,9 @@ def format_obj(cur_obj):
     blender_mesh.free()
 
 def to_object_mode():
-    """
+    '''
     sets all meshes to 'OBJECT MODE'
-    """
+    '''
     scene = bpy.context.scene
     for obj in bpy.data.objects:
         if obj.type == 'MESH':
@@ -263,9 +263,9 @@ def to_object_mode():
             bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
 def detect_morph(m_name, obj_type, morph_id):
-    """
+    '''
     finds any morphing components in scene
-    """
+    '''
     try:
         if obj_type == 'OBJECT':
             morph = bpy.data.objects[MORPH_COMP[morph_id] + m_name]
@@ -277,7 +277,7 @@ def detect_morph(m_name, obj_type, morph_id):
         if morph_id == 2:
             morph = detect_morph(m_name, obj_type, 0)
         if morph_id == 3:
-            morph = detect_morph(m_name, obj_type, 1)
+            morph = detect_morph(m_name, obj_type, 0)
         if morph_id == 4:
             morph = detect_morph(m_name, obj_type, 0)
         if morph_id == 5:
@@ -290,9 +290,9 @@ def detect_morph(m_name, obj_type, morph_id):
 
 
 def get_hierarchy(parent, hierarchy):
-    """
+    '''
     gets hierarchy from parent to children
-    """
+    '''
     for child in parent.children:
         hierarchy[child.name] = parent.name
         #print(child.name + ' <= '+parent.name)
@@ -301,11 +301,11 @@ def get_hierarchy(parent, hierarchy):
 
 
 def export_lnk(lnkpath):
-    """
+    '''
     writes hierarchy in file as *.lnk.
-    """
-    if not lnkpath.lower().endswith(".lnk"):
-        lnkpath += ".lnk"
+    '''
+    if not lnkpath.lower().endswith('.lnk'):
+        lnkpath += '.lnk'
     export_links = dict()
     root_mesh = ''
     for obj in bpy.data.objects:
@@ -325,9 +325,9 @@ def export_lnk(lnkpath):
         flr(pack('i', 0))
 
         def do_upora(start):  # write lnk
-            """
+            '''
             writes recursively lnk file
-            """
+            '''
             for cur_link in export_links:
                 if export_links[cur_link] == start:
                     flr(pack('i', len(cur_link) + 1))
@@ -339,46 +339,85 @@ def export_lnk(lnkpath):
         do_upora(root_mesh)
         lnk_file.close()
     else:
-        print("root mesh of hierarchy is not correct")
+        print('root mesh of hierarchy is not correct')
         return False
     return True
 
 def get_uv_convert_count(filename):
-    """
+    '''
     gets count of convert uv coordinates depending on filename
-    """
-    #match with begin of string
-    if QUEST.match(filename) is not None or QUICK.match(filename) is not None or LOOT.match(filename) is not None:
+    '''
+    #match mask with filename
+    if QUEST_RE.match(filename) is not None or \
+            QUICK_RE.match(filename) is not None or \
+            MATERIAL_RE.match(filename) is not None or \
+            LOOT_RE.match(filename) is not None:
         return 2
-    if WEAPON.match(filename) is not None:
+    if WEAPON_RE.match(filename) is not None or\
+            HELM_RE.match(filename) is not None:
         return 1
     return 0
 
 def unpack_uv(uv_, count):
-    """
+    '''
     increases x,y value 2 times per side and offset by y(vertically)
-    """
+    '''
     for _ in range(count):
         for uv_convert in uv_:
             uv_convert[0] *= 2
             uv_convert[1] = uv_convert[1] * 2 - 1
 
 def pack_uv(uv_, count):
-    """
+    '''
     decreases x,y value 2 times per side and offset by y(vertically)
-    """
+    '''
     for _ in range(count):
         for uv_convert in uv_:
             uv_convert[0] /= 2
             uv_convert[1] = 0.5 + uv_convert[1] / 2
 
+def calculate_unique_component(ei_, comp):
+    '''
+    calculates unique component using base, strength and dexterity components
+    '''
+    temp = [0, 0, 0]
+
+    for xyz in range(3):
+        temp[xyz] = (ei_.center[comp-1][xyz] + \
+            ei_.center[comp-2][xyz] - \
+            ei_.center[comp-3][xyz])
+    ei_.center[comp] = tuple(temp)
+
+
+    for xyz in range(3):
+        temp[xyz] = (ei_.fmin[comp-1][xyz] + \
+            ei_.fmin[comp-2][xyz] - \
+            ei_.fmin[comp-3][xyz])
+    ei_.fmin[comp] = tuple(temp)
+
+    for xyz in range(3):
+        temp[xyz] = (ei_.fmax[comp-1][xyz] + \
+            ei_.fmax[comp-2][xyz] - \
+            ei_.fmax[comp-3][xyz])
+    ei_.fmax[comp] = tuple(temp)
+
+    ei_.radius[comp] = (ei_.radius[comp-1] + ei_.radius[comp-2] - ei_.radius[comp-3])
+
+    for i in range(len(ei_.verts[0])):
+        for xyz in range(3):
+            temp[xyz] = (ei_.verts[comp-1][i][xyz] + \
+                ei_.verts[comp-2][i][xyz] - \
+                ei_.verts[comp-3][i][xyz])
+        ei_.verts[comp].append(tuple(temp))
+
+
 class EiMesh(object):
-    """
+    '''
     container of EI figure, can read and write file *.fig
-    """
+    '''
     def __init__(self):
         self.name = ''
-        self.path = 'c:\\'
+        self.path = ''
         self.header = [0 for _ in range(9)]
         self.center = [(0.0, 0.0, 0.0) for _ in range(8)]
         self.fmin = [(0.0, 0.0, 0.0) for _ in range(8)]
@@ -391,10 +430,10 @@ class EiMesh(object):
         self.indicies = []
         self.v_c = []
 
-    def read_mesh(self):
-        """
+    def read_file(self):
+        '''
         reads data from *.fig file
-        """
+        '''
         fig_file = open(self.path, 'rb')
         ffr = fig_file.read
         while 1 == 1:
@@ -424,14 +463,14 @@ class EiMesh(object):
                 ffr(32)  # xD
                 # VERTICES
                 block = [[[0 for _ in range(3)] for _ in range(8)] for _ in range(4)]
-                for ver in range(self.header[0]):
+                for _ in range(self.header[0]):
                     for xyz in range(3):
-                        for mc in range(8):  #morphing component
-                            for b in range(4):  #block
-                                block[b][mc][xyz] = unpack('f', ffr(4))[0]
-                    for b in range(4):
-                        for mc in range(8):
-                            self.verts[mc].append(tuple(block[b][mc][0:3]))
+                        for component in range(8):  #morphing component
+                            for cur_block in range(4):  #block
+                                block[cur_block][component][xyz] = unpack('f', ffr(4))[0]
+                    for cur_block in range(4):
+                        for component in range(8):
+                            self.verts[component].append(tuple(block[cur_block][component][0:3]))
                 del block
                 # NORMALS
                 ffr(self.header[1] * 64)  # =)
@@ -456,61 +495,77 @@ class EiMesh(object):
                 print('mesh header is not correct')
 
     def create_mesh(self, morph_type):
-        """
+        '''
         creates mesh (count depending on morph type) in scene using data from class
-        """
+        '''
         # FACES
         faces = []
         ftemp = [0, 0, 0]
         face_indices_count = self.header[3] - 2
         cur_face_indices = 0
-        while cur_face_indices < face_indices_count:
-            for vvv in range(3):
-                ftemp[vvv] = self.v_c[self.indicies[cur_face_indices + vvv]][0]
-            faces.append([ftemp[0], ftemp[1], ftemp[2]])
-            cur_face_indices += 3
-        # =====>MESH IN SCENE<======
-        if morph_type == 'smpl':
-            #>>>>>TODO try to find out file scale
-            # try:
-            #    scn.scalefig = self.verts[4][0][0] / self.verts[0][0][0]
-            # except ZeroDivisionError:
-            #    print('ny ebana')
-            models_count = 3
-        if morph_type == 'hrd':
-            models_count = 8
-        if morph_type == 'non':
-            models_count = 1
-        for i in range(models_count):
-            morph_mesh = bpy.data.meshes.new(name=MORPH_COMP[i] + self.name)
-            morph_obj = bpy.data.objects.new(MORPH_COMP[i] + self.name, morph_mesh)
-            morph_obj.location = (0, 0, 0)
-            morph_obj["ei_group"] = self.header[7]
-            morph_obj["t_number"] = self.header[8]
-            bpy.context.scene.objects.link(morph_obj)
-            morph_mesh.from_pydata(self.verts[i], [], faces)
-            morph_mesh.update()
-            if i != 0:
-                #bug here: if you import model again figures on layers !=0 will be
-                #in (0,0,0) location. move it and press ctrl+z to fix it
-                morph_obj.layers[i] = True
-                morph_obj.layers[0] = False
+        if not self.v_c:
+            print (self.name + ': vertices components are empty. check active uv layer')
+        else:
+            while cur_face_indices < face_indices_count:
+                for vvv in range(3):
+                    ftemp[vvv] = self.v_c[self.indicies[cur_face_indices + vvv]][0]
+                faces.append([ftemp[0], ftemp[1], ftemp[2]])
+                cur_face_indices += 3
+            # =====>MESH IN SCENE<======
+            if morph_type == 'smpl':
+                #>>>>>TODO try to find out file scale
+                # try:
+                #    scn.scalefig = self.verts[4][0][0] / self.verts[0][0][0]
+                # except ZeroDivisionError:
+                #    print('ny ebana')
+                models_count = 3
+            if morph_type == 'hrd':
+                models_count = 8
+            if morph_type == 'non':
+                models_count = 1
+            for i in range(models_count):
+                # morph_mesh = bpy.data.meshes.new(name=MORPH_COMP[i] + self.name)
+                # morph_obj = bpy.data.objects.new(MORPH_COMP[i] + self.name, morph_mesh)
+                # morph_obj.location = (0, 0, 0)
+                # morph_obj['ei_group'] = self.header[7]
+                # morph_obj['t_number'] = self.header[8]
+                # bpy.context.scene.objects.link(morph_obj)
+                # morph_mesh.from_pydata(self.verts[i], [], faces)
+                # morph_mesh.update()
+                # if i != 0:
+                #     #bug here: if you import model again figures on layers !=0 will be
+                #     #in (0,0,0) location. move it and press ctrl+z to fix it
+                #     morph_obj.layers[i] = True
+                #     morph_obj.layers[0] = False
+                morph_mesh = bpy.data.meshes.new(name=MORPH_COMP[i] + self.name)
+                morph_obj = bpy.data.objects.new(MORPH_COMP[i] + self.name, morph_mesh)
+                bpy.context.scene.objects.link(morph_obj)
+                morph_obj.layers = [lay == i for lay in range(20)]
+                morph_obj.location = (0, 0, 0)
+                morph_mesh.from_pydata(self.verts[i], [], faces)
+                morph_obj['ei_group'] = self.header[7]
+                morph_obj['t_number'] = self.header[8]
+                morph_mesh.update()
 
-        # UV COORDINATES
-        mesh = bpy.data.meshes[self.name]
-        mesh.uv_textures.new(self.name)
-        for uv_ind in range(self.header[3]):
-            for xy_ in range(2):
-                mesh.uv_layers[0].data[uv_ind].uv[xy_] = self.t_coords[self.v_c[self.indicies[uv_ind]][1]][xy_]
-        mesh.update()
+            # UV COORDINATES
+            mesh = bpy.data.meshes[self.name]
+            mesh.uv_textures.new(self.name)
+            for uv_ind in range(self.header[3]):
+                for xy_ in range(2):
+                    mesh.uv_layers[0].data[uv_ind].uv[xy_] = self.t_coords[self.v_c[self.indicies[uv_ind]][1]][xy_]
+            mesh.update()
 
     def get_data_from_mesh(self, m_name):
-        """
+        '''
         gets data from current mesh by mesh name
-        """
+        '''
         scn = bpy.context.scene
         for mesh_morph_component in range(8):
             mesh = detect_morph(m_name, 'MESH', mesh_morph_component)
+            if (mesh_morph_component == 3 or mesh_morph_component == 7) and \
+                    MORPH_COMP[mesh_morph_component] not in mesh.name:
+                calculate_unique_component(self, mesh_morph_component)
+                continue
             count_vert = 0
             count_norm = 0
             v_restore = 0
@@ -566,7 +621,8 @@ class EiMesh(object):
                 (self.fmax[mesh_morph_component][2] - self.fmin[mesh_morph_component][2]) ** 2) / 2
             # REAL CENTER
             for i in range(3):
-                tmp3[i] = (self.fmin[mesh_morph_component][i] + self.fmax[mesh_morph_component][i]) / 2
+                tmp3[i] = (self.fmin[mesh_morph_component][i] + \
+                    self.fmax[mesh_morph_component][i]) / 2
             self.center[mesh_morph_component] = tuple(tmp3)
             # MIN & MAX
             for i in range(3):
@@ -578,7 +634,8 @@ class EiMesh(object):
             if count_vert % 4 != 0:
                 v_restore = 4 - count_vert % 4
             for _ in range(v_restore):
-                self.verts[mesh_morph_component].append((0.0, 0.0, 0.0))
+                #self.verts[mesh_morph_component].append((0.0, 0.0, 0.0))
+                self.verts[mesh_morph_component].append([0.0, 0.0, 0.0])
                 count_vert += 1
             # if count_vert % 4 == 0 and mesh_morph_component == 0:
                 #print('verts now: ' + str(count_vert) + ' added: ' + str(v_restore))
@@ -604,62 +661,70 @@ class EiMesh(object):
                             ind_ar.append(poly_vrt)
                         ind_count += 1
                 # UV COORDS PREPARE
-                uv_ar = []  # array with all t_coords
-                new_uv_ind = []
-                if mesh.uv_layers.active_index >= 0:
+                if mesh.uv_layers.active_index < 0:
+                    print ('mesh ' + mesh.name + ' has no active uv layer')
+
+                else:
+                    uv_ar = []  # array with all t_coords
+                    new_uv_ind = []
                     for uv_act in mesh.uv_layers.active.data:  # get only active layer with uv_cords
                         uv_ = [uv_act.uv[0], uv_act.uv[1]]
                         uv_ar.append(copy.copy(uv_))
                         if uv_ not in self.t_coords:
                             self.t_coords.append(uv_)
-                else:
-                    print ("mesh " + mesh.name + "has no active uv layer")
-                self.header[2] = len(self.t_coords)
-                self.header[3] = ind_count
-                for uv_ind1 in uv_ar:  # get indicies of new t_coords array
-                    for uv_ind2 in self.t_coords:
-                        if uv_ind1 == uv_ind2:
-                            new_uv_ind.append(self.t_coords.index(uv_ind2))
-
-                # VERTEX COMPONENTS
-                for n_i in range(len(ind_ar)):
-                    uv_ind = [ind_ar[n_i], new_uv_ind[n_i]]
-                    if uv_ind not in self.v_c:
-                        self.v_c.append(copy.copy(uv_ind))
-                #>>>>>TODO use other sort instead bubble sort
-                for _ in range(len(self.v_c)):
-                    for buble in range(len(self.v_c) - 1):
-                        if self.v_c[buble][0] > self.v_c[buble + 1][0]:
-                            swap_pts = copy.copy(self.v_c[buble + 1])
-                            self.v_c[buble + 1] = copy.copy(self.v_c[buble])
-                            self.v_c[buble] = copy.copy(swap_pts)
-                        elif self.v_c[buble][0] == self.v_c[buble + 1][0]:
-                            if self.v_c[buble][1] > self.v_c[buble + 1][1]:
+                    for uv_ind1 in uv_ar:  # get indicies of new t_coords array
+                        for uv_ind2 in self.t_coords:
+                            if uv_ind1 == uv_ind2:
+                                new_uv_ind.append(self.t_coords.index(uv_ind2))
+                    # VERTEX COMPONENTS
+                    for n_i in range(len(ind_ar)):
+                        uv_ind = [ind_ar[n_i], new_uv_ind[n_i]]
+                        if uv_ind not in self.v_c:
+                            self.v_c.append(copy.copy(uv_ind))
+                    #>>>>>TODO use other sort instead bubble sort
+                    for _ in range(len(self.v_c)):
+                        for buble in range(len(self.v_c) - 1):
+                            if self.v_c[buble][0] > self.v_c[buble + 1][0]:
                                 swap_pts = copy.copy(self.v_c[buble + 1])
                                 self.v_c[buble + 1] = copy.copy(self.v_c[buble])
                                 self.v_c[buble] = copy.copy(swap_pts)
-                self.header[4] = len(self.v_c)
-                # INDICIES
-                #>>>>>TODO refactore?!
-                for mix in range(len(ind_ar)):
-                    for mix1 in range(len(self.v_c)):
-                        if (ind_ar[mix] == self.v_c[mix1][0]) & (new_uv_ind[mix] == self.v_c[mix1][1]):
-                            self.indicies.append(mix1)
-                            break
+                            elif self.v_c[buble][0] == self.v_c[buble + 1][0]:
+                                if self.v_c[buble][1] > self.v_c[buble + 1][1]:
+                                    swap_pts = copy.copy(self.v_c[buble + 1])
+                                    self.v_c[buble + 1] = copy.copy(self.v_c[buble])
+                                    self.v_c[buble] = copy.copy(swap_pts)
+                    self.header[4] = len(self.v_c)
+                    # INDICIES
+                    #>>>>>TODO refactore?!
+                    for mix in range(len(ind_ar)):
+                        for mix1 in range(len(self.v_c)):
+                            if (ind_ar[mix] == self.v_c[mix1][0]) & (new_uv_ind[mix] == self.v_c[mix1][1]):
+                                self.indicies.append(mix1)
+                                break
+
+                self.header[2] = len(self.t_coords)
+                self.header[3] = ind_count
+
                 #GROUP AND TEXTURE NUMBER
-                try:
+                if mesh.name in bpy.data.objects:
                     obj = bpy.data.objects[mesh.name]
-                    self.header[7] = obj["ei_group"]
-                    self.header[8] = obj["t_number"]
-                except KeyError:
-                    print ('key error blead/t' + mesh.name + " use the same name for object and its mesh")
+                    if obj.get('ei_group') is not None:
+                        self.header[7] = obj['ei_group']
+                    else:
+                        self.header[7] = 0
+                    if obj.get('t_number') is not None:
+                        self.header[8] = obj['t_number']
+                    else:
+                        self.header[8] = 0
+                else:
+                    print ('key error blead\t' + mesh.name + ' use the same name for object and its mesh')
                     self.header[7] = 18
                     self.header[8] = 8
 
-    def write_in_file(self):
-        """
+    def write_file(self):
+        '''
         writes mesh in file as *.fig
-        """
+        '''
         fig_file = open(self.path, 'wb')
         ffw = fig_file.write
         ffw(b'FIG8')
@@ -717,18 +782,18 @@ class EiMesh(object):
 
 
 class EiBon(object):
-    """
+    '''
     container of EI bone position, can read and write file *.bon
-    """
+    '''
     def __init__(self):
         self.name = ''
-        self.path = 'c:\\'
+        self.path = ''
         self.pos = [(0.0, 0.0, 0.0) for _ in range(8)]
 
     def read_pos(self):
-        """
+        '''
         reads position of figure from *.bon file
-        """
+        '''
         bon_file = open(self.path, 'rb')
         btmp = [0, 0, 0]
         for mrph_cmp in range(8):
@@ -738,9 +803,9 @@ class EiBon(object):
         bon_file.close()
 
     def set_pos(self, morph_type):
-        """
+        '''
         sets position to mesh and this morph components
-        """
+        '''
         if morph_type == 'smpl':
             pos_counter = 3
         if morph_type == 'hrd':
@@ -751,25 +816,25 @@ class EiBon(object):
             try:
                 bpy.data.objects[MORPH_COMP[cur_morph] + self.name].location = self.pos[cur_morph]
             except KeyError:
-                print(MORPH_COMP[cur_morph] + self.name + " : object not found in scene")
+                print(MORPH_COMP[cur_morph] + self.name + ' : object not found in scene')
 
     def get_object_position(self, name):
-        """
+        '''
         gets position from object by name and his morph friends
-        """
+        '''
         scn = bpy.context.scene
         for morph_component_id in range(8):
             obj = detect_morph(name, 'OBJECT', morph_component_id)
-            if (scn.MorphType == "smpl") and (morph_component_id > 3):
+            if (scn.MorphType == 'smpl') and (morph_component_id > 3):
                 scale = scn.scalefig
             else:
                 scale = 1
             self.pos[morph_component_id] = tuple(obj.location * scale)
 
     def write_pos(self):
-        """
+        '''
         writes position in file
-        """
+        '''
         bon_file = open(self.path, 'wb')
         for mrph_cmp in range(8):
             for xyz in range(3):
@@ -783,11 +848,11 @@ class EiBon(object):
 ##########################################################################
 
 class ChooseDir(bpy.types.Operator):
-    """
+    '''
     operator to choose project dir for export
-    """
-    bl_label = "Choose dir"
-    bl_idname = "object.choose_dir"
+    '''
+    bl_label = 'Choose dir'
+    bl_idname = 'object.choose_dir'
     directory = bpy.props.StringProperty(subtype='DIR_PATH')
 
     def execute(self, context):
@@ -797,31 +862,31 @@ class ChooseDir(bpy.types.Operator):
     def invoke(self, context, event):
         wm = context.window_manager
         wm.fileselect_add(self)
-        return {"RUNNING_MODAL"}
+        return {'RUNNING_MODAL'}
 
 
 class EiExportOnlyLnk(bpy.types.Operator):
-    """
+    '''
     writes all objects links in one file as *.lnk
-    """
-    bl_label = "export lnk"
-    bl_idname = "object.export_only_lnk"
-    bl_description = "export link file"
+    '''
+    bl_label = 'export lnk'
+    bl_idname = 'object.export_only_lnk'
+    bl_description = 'export link file'
 
     def execute(self, context):
         clean()
         scn = context.scene
         if export_lnk(scn.DestinationDir + scn.LnkName):
-            self.report({'INFO'}, scn.LnkName + ".lnk exported")
-        return {"FINISHED"}
+            self.report({'INFO'}, scn.LnkName + '.lnk exported')
+        return {'FINISHED'}
 
 
 class EiExportOnlyFigs(bpy.types.Operator):
-    """
+    '''
     writes selected objects data in file as *.lnk
-    """
-    bl_label = "export fig"
-    bl_idname = "object.export_only_fig"
+    '''
+    bl_label = 'export fig'
+    bl_idname = 'object.export_only_fig'
     def execute(self, context):
         clean()
         scn = context.scene
@@ -834,20 +899,20 @@ class EiExportOnlyFigs(bpy.types.Operator):
                 cur_m.name = mesh.name
                 cur_m.path = os.path.join(scn.DestinationDir, mesh.name + '.fig')
                 cur_m.get_data_from_mesh(mesh.name)
-                cur_m.write_in_file()
+                cur_m.write_file()
                 if info == 1:
-                    self.report({'INFO'}, mesh.name + ".fig exported")
+                    self.report({'INFO'}, mesh.name + '.fig exported')
         if info > 1:
-            self.report({'INFO'}, "*.fig(s) exported")
-        return {"FINISHED"}
+            self.report({'INFO'}, '*.fig(s) exported')
+        return {'FINISHED'}
 
 
 class EiExportOnlyBons(bpy.types.Operator):
-    """
+    '''
     writes selected objects positions in file as *.fig
-    """
-    bl_label = "export bon"
-    bl_idname = "object.export_only_bon"
+    '''
+    bl_label = 'export bon'
+    bl_idname = 'object.export_only_bon'
 
     def execute(self, context):
         clean()
@@ -857,14 +922,14 @@ class EiExportOnlyBons(bpy.types.Operator):
             if obj.name[0:2] not in MORPH_COMP.values():
                 cur_b = EiBon()
                 cur_b.name = obj.name
-                cur_b.path = os.path.join(scn.DestinationDir, obj.name + ".bon")
+                cur_b.path = os.path.join(scn.DestinationDir, obj.name + '.bon')
                 cur_b.get_object_position(obj.name)
                 cur_b.write_pos()
                 if info == 1:
-                    self.report({'INFO'}, obj.name + ".bon exported")
+                    self.report({'INFO'}, obj.name + '.bon exported')
         if info > 1:
-            self.report({'INFO'}, "*.bon(s) exported")
-        return {"FINISHED"}
+            self.report({'INFO'}, '*.bon(s) exported')
+        return {'FINISHED'}
 
 ##########################################################################
 ##########################################################################
@@ -872,20 +937,20 @@ class EiExportOnlyBons(bpy.types.Operator):
 ##########################################################################
 ##########################################################################
 
-def add_morph_comp(act_obj, mrph_cmp):
-    """
+def add_morph_comp(act_obj, morph_component):
+    '''
     copys base object on new layer according to morphing prefix
-    """
-    if (mrph_cmp + act_obj.name) not in bpy.data.objects:
+    '''
+    if (morph_component + act_obj.name) not in bpy.data.objects:
         # copy object
         new_obj = act_obj.copy()
         new_obj.data = act_obj.data.copy()
-        new_obj.name = (mrph_cmp + act_obj.name)
-        new_obj.data.name = (mrph_cmp + act_obj.name)
+        new_obj.name = (morph_component + act_obj.name)
+        new_obj.data.name = (morph_component + act_obj.name)
         bpy.context.scene.objects.link(new_obj)
         # place object in according to layer
         for i in MORPH_COMP:
-            if MORPH_COMP[i] == mrph_cmp:
+            if MORPH_COMP[i] == morph_component:
                 new_obj.layers[i] = True
                 new_obj.layers[0] = False
     else:
@@ -893,9 +958,9 @@ def add_morph_comp(act_obj, mrph_cmp):
 
 
 def morphing_list(self, context):
-    """
+    '''
     returns list of morphing components for UI
-    """
+    '''
     hard_morph_list = [
         ('s~', 'Strength (s~)', 'Strength component', 1),
         ('d~', 'Dexterity (d~)', 'Dexterity component', 2),
@@ -903,12 +968,12 @@ def morphing_list(self, context):
         ('b~', 'Scaled (b~)', 'Scaled base figure', 4),
         ('p~', 'Power (p~)', 'Scaled strength component', 5),
         ('g~', 'Grace (g~)', 'Scaled dexterity component', 6),
-        ('c~', 'Common (c~)', 'Common scaled strength & scaled dexterity components in one object', 7)
+        ('c~', 'Common (c~)', 'Common scaled strength & \
+            scaled dexterity components in one object', 7)
         ]
     simple_morph_list = [
         ('s~', 'Strength (s~)', 'Strength component', 1),
-        ('d~', 'Dexterity (d~)', 'Dexterity component', 2),
-        ('u~', 'Unique (u~)', 'Mean between Strength & Dexterity components in one object', 3)
+        ('d~', 'Dexterity (d~)', 'Dexterity component', 2)
         ]
     if context.scene.MorphType == 'hrd':
         return hard_morph_list
@@ -917,9 +982,9 @@ def morphing_list(self, context):
 
 
 def calculate_mesh(self, context):
-    """
+    '''
     calculates test unit using data (str, dex, height) from scene
-    """
+    '''
     q_str = context.scene.MeshStr
     q_dex = context.scene.MeshDex
     q_height = context.scene.MeshHeight
@@ -928,38 +993,40 @@ def calculate_mesh(self, context):
     global MESH_LIST
     global POS_LIST
     for t_mesh in MESH_LIST:
-        m_verts = FIG_TABLE[t_mesh].verts
-        for vert in bpy.data.meshes[t_mesh].vertices:
+        if t_mesh in bpy.data.meshes:
+            m_verts = FIG_TABLE[t_mesh].verts
+            for vert in bpy.data.meshes[t_mesh].vertices:
+                for i in range(3):
+                    temp1 = m_verts[0][vert.index][i] + \
+                        (m_verts[1][vert.index][i] - m_verts[0][vert.index][i]) * q_str
+                    temp2 = m_verts[2][vert.index][i] + \
+                        (m_verts[3][vert.index][i] - m_verts[2][vert.index][i]) * q_str
+                    value1 = temp1 + (temp2 - temp1) * q_dex
+                    temp1 = m_verts[4][vert.index][i] + \
+                        (m_verts[5][vert.index][i] - m_verts[4][vert.index][i]) * q_str
+                    temp2 = m_verts[6][vert.index][i] + \
+                        (m_verts[7][vert.index][i] - m_verts[6][vert.index][i]) * q_str
+                    value2 = temp1 + (temp2 - temp1) * q_dex
+                    final = value1 + (value2 - value1) * q_height
+                    vert.co[i] = final
+    for t_pos in POS_LIST:
+        if t_pos in bpy.data.objects:
+            m_pos = BON_TABLE[t_pos].pos
             for i in range(3):
-                temp1 = m_verts[0][vert.index][i] + \
-                    (m_verts[1][vert.index][i] - m_verts[0][vert.index][i]) * q_str
-                temp2 = m_verts[2][vert.index][i] + \
-                    (m_verts[3][vert.index][i] - m_verts[2][vert.index][i]) * q_str
+                temp1 = m_pos[0][i] + (m_pos[1][i] - m_pos[0][i]) * q_str
+                temp2 = m_pos[2][i] + (m_pos[3][i] - m_pos[2][i]) * q_str
                 value1 = temp1 + (temp2 - temp1) * q_dex
-                temp1 = m_verts[4][vert.index][i] + \
-                    (m_verts[5][vert.index][i] - m_verts[4][vert.index][i]) * q_str
-                temp2 = m_verts[6][vert.index][i] + \
-                    (m_verts[7][vert.index][i] - m_verts[6][vert.index][i]) * q_str
+                temp1 = m_pos[4][i] + (m_pos[5][i] - m_pos[4][i]) * q_str
+                temp2 = m_pos[6][i] + (m_pos[7][i] - m_pos[6][i]) * q_str
                 value2 = temp1 + (temp2 - temp1) * q_dex
                 final = value1 + (value2 - value1) * q_height
-                vert.co[i] = final
-    for t_pos in POS_LIST:
-        m_pos = BON_TABLE[t_pos].pos
-        for i in range(3):
-            temp1 = m_pos[0][i] + (m_pos[1][i] - m_pos[0][i]) * q_str
-            temp2 = m_pos[2][i] + (m_pos[3][i] - m_pos[2][i]) * q_str
-            value1 = temp1 + (temp2 - temp1) * q_dex
-            temp1 = m_pos[4][i] + (m_pos[5][i] - m_pos[4][i]) * q_str
-            temp2 = m_pos[6][i] + (m_pos[7][i] - m_pos[6][i]) * q_str
-            value2 = temp1 + (temp2 - temp1) * q_dex
-            final = value1 + (value2 - value1) * q_height
-            bpy.data.objects[t_pos].location[i] = final
+                bpy.data.objects[t_pos].location[i] = final
 
 
 class RefreshTestTable(bpy.types.Operator):
-    bl_label = "EI refresh test unit"
-    bl_idname = "object.refresh_test_unit"
-    bl_description = "delete current test unit and create new one"
+    bl_label = 'EI refresh test unit'
+    bl_idname = 'object.refresh_test_unit'
+    bl_description = 'delete current test unit and create new one'
 
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')
@@ -974,14 +1041,10 @@ class RefreshTestTable(bpy.types.Operator):
                 bpy.ops.view3d.layers(nr=9, extend=False)
                 bpy.ops.object.delete()
         clean()
-        if MESH_LIST:
-            MESH_LIST = []
-        if POS_LIST:
-            POS_LIST = []
-        if FIG_TABLE:
-            FIG_TABLE.clear()
-        if BON_TABLE:
-            BON_TABLE.clear()
+        MESH_LIST = []
+        POS_LIST = []
+        FIG_TABLE.clear()
+        BON_TABLE.clear()
         to_object_mode()
 
         #find base objects
@@ -1007,8 +1070,9 @@ class RefreshTestTable(bpy.types.Operator):
 
         for t_ind in MESH_LIST:
             FIG_TABLE[t_ind].create_mesh('non')
-            bpy.data.objects[t_ind].layers[8] = True
-            bpy.data.objects[t_ind].layers[0] = False
+            if t_ind in bpy.data.objects:
+                bpy.data.objects[t_ind].layers[8] = True
+                bpy.data.objects[t_ind].layers[0] = False
         create_hierarchy(tu_dict)
         for p_ind in POS_LIST:
             BON_TABLE[p_ind].set_pos('non')
@@ -1017,9 +1081,9 @@ class RefreshTestTable(bpy.types.Operator):
 
 
 class MorphOperators(bpy.types.Operator):
-    bl_label = "EI Add Morphing Components"
-    bl_idname = "object.addmorphcomp"
-    bl_description = "Add morphing component of selected objects"
+    bl_label = 'EI Add Morphing Components'
+    bl_idname = 'object.addmorphcomp'
+    bl_description = 'Add morphing component of selected objects'
 
     def execute(self, context):
         prefix = bpy.context.scene.MorphComp
@@ -1041,32 +1105,32 @@ class MorphOperators(bpy.types.Operator):
         return {'FINISHED'}
 
 class ClearScene(bpy.types.Operator):
-    bl_label = "Del all"
-    bl_idname = "object.clearscene"
-    bl_description = "Delete all objects and meshes from scene"
+    bl_label = 'Del all'
+    bl_idname = 'object.clearscene'
+    bl_description = 'Delete all objects and meshes from scene'
 
     def execute(self, context):
         scene_clear()
         return {'FINISHED'}
 
 def ei_set_group(self, context):
-    """
+    '''
     Set EI group for selected objects
-    """
+    '''
     for obj in bpy.context.selected_objects:
-        obj["ei_group"] = bpy.context.object.ei_group
+        obj['ei_group'] = bpy.context.object.ei_group
 
 def ei_set_texture_number(self, context):
-    """
+    '''
     Set EI texture number for selected objects
-    """
+    '''
     for obj in bpy.context.selected_objects:
-        obj["t_number"] = bpy.context.object.t_number
+        obj['t_number'] = bpy.context.object.t_number
 
 class PackUv(bpy.types.Operator):
-    bl_label = "Pack uv coords"
-    bl_idname = "object.packuvcoords"
-    bl_description = "Pack UV coords same EI for selected objects"
+    bl_label = 'Pack uv coords'
+    bl_idname = 'object.packuvcoords'
+    bl_description = 'Pack UV coords same EI for selected objects'
 
     def execute(self, context):
         to_object_mode()
@@ -1078,9 +1142,9 @@ class PackUv(bpy.types.Operator):
         return {'FINISHED'}
 
 class UnpackUv(bpy.types.Operator):
-    bl_label = "Unpack uv coords"
-    bl_idname = "object.unpackuvcoords"
-    bl_description = "Unpack UV coords same EI for selected objects"
+    bl_label = 'Unpack uv coords'
+    bl_idname = 'object.unpackuvcoords'
+    bl_description = 'Unpack UV coords same EI for selected objects'
 
     def execute(self, context):
         to_object_mode()
@@ -1092,31 +1156,31 @@ class UnpackUv(bpy.types.Operator):
         return {'FINISHED'}
 
 class ApplySelect(bpy.types.Operator):
-    bl_label = "Select objects by type of select"
-    bl_idname = "object.applyselect"
-    bl_description = "Select objects depending on choose type"
+    bl_label = 'Select objects by type of select'
+    bl_idname = 'object.applyselect'
+    bl_description = 'Select objects depending on choose type'
 
     def execute(self, context):
-        if context.scene.selectType == "mrph":
+        if context.scene.selectType == 'mrph':
             for obj in context.selected_objects:
                 if obj.name[0:2] in MORPH_COMP.values():
                     find_name = obj.name[2:]
                 else:
                     find_name = obj.name
                     for morph_id in range(8):
-                        detect_morph(find_name, "OBJECT", morph_id).select = True
-        if context.scene.selectType == "grp" or context.scene.selectType == "txtrnmbr":
+                        detect_morph(find_name, 'OBJECT', morph_id).select = True
+        if context.scene.selectType == 'grp' or context.scene.selectType == 'txtrnmbr':
             minRange = context.scene.selectMin
             maxRange = context.scene.selectMax
             for obj in context.selected_objects:
                 obj.select = False
-        if context.scene.selectType == "grp":
+        if context.scene.selectType == 'grp':
             for obj in bpy.data.objects:
-                if obj["ei_group"] >= minRange and obj["ei_group"] <= maxRange:
+                if obj['ei_group'] >= minRange and obj['ei_group'] <= maxRange:
                     obj.select = True
-        if context.scene.selectType == "txtrnmbr":
+        if context.scene.selectType == 'txtrnmbr':
             for obj in bpy.data.objects:
-                if obj["t_number"] >= minRange and obj["t_number"] <= maxRange:
+                if obj['t_number'] >= minRange and obj['t_number'] <= maxRange:
                     obj.select = True
 
         return {'FINISHED'}
@@ -1130,9 +1194,9 @@ def update_range_max(self, context):
         context.scene.selectMin = context.scene.selectMax
 
 class SetSameUvLayerName(bpy.types.Operator):
-    bl_label = "set active uv layer name"
-    bl_idname = "object.setsameuvlayername"
-    bl_description = "Sets the name to active uv layer of selected objects"
+    bl_label = 'set active uv layer name'
+    bl_idname = 'object.setsameuvlayername'
+    bl_description = 'Sets the name to active uv layer of selected objects'
 
     def execute(self, context):
         to_object_mode()
@@ -1180,13 +1244,13 @@ def create_hierarchy(lnks):
 
 
 class EIImport(bpy.types.Operator):
-    bl_label = "EI model import Operator"
-    bl_idname = "object.eimodelimport"
-    bl_description = "Import model from Evil Islands file"
+    bl_label = 'EI model import Operator'
+    bl_idname = 'object.eimodelimport'
+    bl_description = 'Import model from Evil Islands file'
     filepath = bpy.props.StringProperty(subtype='FILE_PATH')
 
     def execute(self, context):
-        self.report({'INFO'}, "executing import")
+        self.report({'INFO'}, 'executing import')
         path_file = self.filepath
         scene = context.scene
         clean()
@@ -1194,12 +1258,12 @@ class EIImport(bpy.types.Operator):
         if path_file.lower().endswith('.lnk'):
             links, root_mesh = import_lnk(path_file)
             for node in links:
-                figfile = os.path.join(os.path.dirname(path_file), node + ".fig")
+                figfile = os.path.join(os.path.dirname(path_file), node + '.fig')
                 if os.path.exists(figfile):
                     cur_m = EiMesh()
                     cur_m.path = figfile
                     cur_m.name = node
-                    cur_m.read_mesh()
+                    cur_m.read_file()
                     cur_m.create_mesh(scene.MorphType)
 
             create_hierarchy(links)
@@ -1213,12 +1277,13 @@ class EIImport(bpy.types.Operator):
                 morphed_links = dict()
                 for base_node in links:
                     if links[base_node] is None:
-                        morphed_links[str(MORPH_COMP[i + 1]) + str(base_node)] = None
+                        morphed_links[MORPH_COMP[i + 1] + base_node] = None
                     else:
-                        morphed_links[str(MORPH_COMP[i + 1]) + str(base_node)] = str(MORPH_COMP[i + 1]) + str(links[base_node])
+                        morphed_links[MORPH_COMP[i + 1] + base_node] = MORPH_COMP[i + 1] + \
+                            links[base_node]
                 create_hierarchy(morphed_links)
             for node in links:
-                bonfile = os.path.join(os.path.dirname(path_file), node + ".bon")
+                bonfile = os.path.join(os.path.dirname(path_file), node + '.bon')
                 if os.path.exists(bonfile):
                     cur_b = EiBon()
                     cur_b.path = bonfile
@@ -1230,7 +1295,7 @@ class EIImport(bpy.types.Operator):
             cur_m = EiMesh()
             cur_m.path = path_file
             cur_m.name = os.path.basename(os.path.splitext(path_file)[0])
-            cur_m.read_mesh()
+            cur_m.read_file()
             cur_m.create_mesh(scene.MorphType)
 
         if path_file.lower().endswith('.bon'):
@@ -1239,13 +1304,13 @@ class EIImport(bpy.types.Operator):
             cur_b.path = path_file
             cur_b.read_pos()
             cur_b.set_pos(scene.MorphType)
-        self.report({'INFO'}, "finished import")
+        self.report({'INFO'}, 'finished import')
         return {'FINISHED'}
 
     def invoke(self, context, event):
         WindowManager = context.window_manager
         WindowManager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
+        return {'RUNNING_MODAL'}
 
 
 ##########################################################################
@@ -1314,13 +1379,13 @@ def order(linked, root):
 
 
 class EiAnimationImport(bpy.types.Operator):
-    bl_label = "EI animation import Operator"
-    bl_idname = "object.eimanimationimport"
-    bl_description = "Importing animation file from Evil Islands"
+    bl_label = 'EI animation import Operator'
+    bl_idname = 'object.eimanimationimport'
+    bl_description = 'Importing animation file from Evil Islands'
     filepath = bpy.props.StringProperty(subtype='FILE_PATH')
 
     def execute(self, context):
-        self.report({'INFO'}, "executing import")
+        self.report({'INFO'}, 'executing import')
         path_file = self.filepath
         scene = bpy.context.scene
 
@@ -1351,22 +1416,22 @@ class EiAnimationImport(bpy.types.Operator):
                     bpy.data.objects[anmlnk[num]].keyframe_insert(
                         data_path='rotation_quaternion', index=-1)
 
-        self.report({'INFO'}, "finished import")
+        self.report({'INFO'}, 'finished import')
         return {'FINISHED'}
 
     def invoke(self, context, event):
         WindowManager = context.window_manager
         WindowManager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
+        return {'RUNNING_MODAL'}
 
 
 class testButton(bpy.types.Operator):
-    bl_label = "knopo4ka"
-    bl_idname = "object.knopo4ka"
-    bl_description = "none"
+    bl_label = 'knopo4ka'
+    bl_idname = 'object.knopo4ka'
+    bl_description = 'none'
 
     def execute(self, context):
-        self.report({'INFO'}, "Hello friend! Have a nice day :)")
+        self.report({'INFO'}, 'Hello friend! Have a nice day :)')
         return {'FINISHED'}
 
 ##########################################################################
@@ -1378,22 +1443,22 @@ class testButton(bpy.types.Operator):
 def register():
     bpy.utils.register_module(__name__)
     bpy.types.Scene.scalefig = bpy.props.FloatProperty(
-        name="scale",
+        name='scale',
         default=2,
         min=0,
         max=3)
     bpy.types.Scene.MorphComp = bpy.props.EnumProperty(
         items=morphing_list,
-        name="",
-        description="Select morphing component to add")
+        name='',
+        description='Select morphing component to add')
     bpy.types.Scene.MorphType = bpy.props.EnumProperty(
         items=[
             ('non', 'None', 'Contains only base objects', 1),
             ('smpl', 'Simple', 'Contains base (str & dex optionally) component(s) and scale', 2),
             ('hrd', '^^>H.A.R.D<^^', 'Contains 8 morphed components for EVERY object', 3)
             ],
-        name="",
-        description="Select type of morphing",
+        name='',
+        description='Select type of morphing',
         default='non')
     bpy.types.Scene.selectType = bpy.props.EnumProperty(
         items=[
@@ -1401,34 +1466,34 @@ def register():
             ('grp', 'group range', 'desc', 2),
             ('txtrnmbr', 't_number range', 'desc', 3)
             ],
-        name="",
-        description="Type of selecting",
+        name='',
+        description='Type of selecting',
         default='mrph')
     bpy.types.Scene.sameUV = bpy.props.StringProperty(
-        name="",
-        default="ei_unwrap",
+        name='',
+        default='ei_unwrap',
     )
     bpy.types.Scene.DestinationDir = bpy.props.StringProperty(
-        name="dir",
-        default="c:\\",
-        description="destination dir for export selected objects as you wish"
+        name='dir',
+        default='',
+        description='destination dir for export selected objects as you wish'
     )
     bpy.types.Scene.LnkName = bpy.props.StringProperty(
-        name="name",
-        default="model"
+        name='name',
+        default='model'
     )
     bpy.types.Scene.MeshStr = bpy.props.FloatProperty(
-        name="str",
+        name='str',
         default=0.5,
         step=2,
         update=calculate_mesh)
     bpy.types.Scene.MeshDex = bpy.props.FloatProperty(
-        name="dex",
+        name='dex',
         default=0.5,
         step=2,
         update=calculate_mesh)
     bpy.types.Scene.MeshHeight = bpy.props.FloatProperty(
-        name="height",
+        name='height',
         default=0.5,
         step=2,
         update=calculate_mesh)
@@ -1456,34 +1521,34 @@ def register():
     #          'Materials such as rocks, metalls, animal skin and items only for sale\n' +
     #          'Texture: 64x64, alpha-channel is necessary\n' +
     #          'dds: 8.8.8.8 ARGB', 6)],
-    #     name="uv type",
-    #     description="uv coordinates type of EI object",
+    #     name='uv type',
+    #     description='uv coordinates type of EI object',
     #     default='wrld',
     #     update=set_uv_type)
     bpy.types.Scene.selectMin = bpy.props.IntProperty(
-        name="",
+        name='',
         default=0,
         min=0,
         update=update_range_min
         )
     bpy.types.Scene.selectMax = bpy.props.IntProperty(
-        name="",
+        name='',
         default=0,
         min=0,
         update=update_range_max
         )
     bpy.types.Object.ei_group = bpy.props.IntProperty(
-        name="group",
+        name='group',
         description="I don't know why it needs but EI figures contain different groups",
         default=0,
         step=1,
         min=0,
         update=ei_set_group)
     bpy.types.Object.t_number = bpy.props.IntProperty(
-        name="texture number",
-        description="Affects on draw in EI.\n" +
-        "For example, quick/quest/loot items, world objects use 8 number\n" +
-        "Try another number for more information",
+        name='texture number',
+        description='Affects on draw in EI.\n' +
+        'For example, quick/quest/loot items, world objects use 8 number\n' +
+        'Try another number for more information',
         default=0,
         step=1,
         min=0,
@@ -1505,5 +1570,5 @@ def unregister():
     bpy.types.Object.ei_group
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     register()
