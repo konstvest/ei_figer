@@ -937,7 +937,7 @@ class EiMesh(object):
                         max_m = copy.copy(mvert.co)
                     for xyz in range(3):
                         if max_m[xyz] < mvert.co[xyz]: max_m[xyz] = mvert.co[xyz]
-                        if min_m[xyz] < mvert.co[xyz]: min_m[xyz] = mvert.co[xyz]
+                        if min_m[xyz] > mvert.co[xyz]: min_m[xyz] = mvert.co[xyz]
                 if mesh_morph_component == 0:
                     duplicate_vert += 1
             #scale min & max
