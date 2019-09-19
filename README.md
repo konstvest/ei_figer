@@ -1,5 +1,6 @@
 # ei_figer
 ==== Russian ====
+
 ei_figer - расширение для программы Blender, предназначенное для создания\редактирования 3D моделей из игры Проклятые Земли.
 
 После установки расширения, его можно найти в разделе 3D: tools->EI import-export.
@@ -18,6 +19,7 @@ ei_figer - расширение для программы Blender, предна�
 Более подробное разъяснение по работе с расширением можно посмотреть в плейлисте youtube: https://www.youtube.com/playlist?list=PL9anrfcxEebQE9xIWRUYnlM_zI0mKg65U
 
 ==== English ====
+
 ei_figer is an addon for the Blender program, designed to create/edit 3D models from the game Cursed Earth.
 
 After installing the addon, it can be found in the 3D section: tools-> EI import-export.
