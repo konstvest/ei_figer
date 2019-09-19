@@ -17,7 +17,7 @@ bl_info = {
     'name': 'EI figer',
     'author': 'konstvest',
     'version': (3, 0),
-    'blender': (2, 79, 0),
+    'blender': (2, 80, 0),
     'location': '',
     'description': 'Addon for import-export model Evil Islands <-> Blender',
     'wiki_url': '',
@@ -39,17 +39,32 @@ FIG_TABLE = dict()
 BON_TABLE = dict()
 MESH_LIST = list()
 POS_LIST = list()
-MORPH_COMP = {
-    0: '',
-    1: 's~',
-    2: 'd~',
-    3: 'u~',
-    4: 'b~',
-    5: 'p~',
-    6: 'g~',
-    7: 'c~',
-    8: 'T~'
-    }
+MORPH_COMP = [
+    '',     #0
+    's~',   #1
+    'd~',   #2
+    'u~',   #3
+    'b~',   #4
+    'p~',   #5
+    'g~',   #6
+    'c~',   #7
+    'T~'    #8
+     ]
+#D.collections['base'].objects.link(D.collections['Collection'].objects[0])
+# for col in MORPH_COLLECTION.values():
+#     collection = bpy.data.collections.new(col)
+#     bpy.context.scene.collection.children.link(collection)
+MORPH_COLLECTION = [
+    'base',             #0
+    'str',              #1
+    'dex',              #2
+    'unique',           #3
+    'base(scaled)',     #4
+    'str(scaled)',      #5
+    'dex(scaled)',      #6
+    'unique(scaled)',   #7
+    'testUnit'          #8
+]
 ANM_TABLE = dict()
 
 QUEST_RE = re.compile('initqu[0-9]+item')              # initqu%ditem
@@ -59,11 +74,10 @@ HELM_RE = re.compile('initarhl[0-9]+armor')            # initarhl%darmor
 LOOT_RE = re.compile('initlitr[0-9]+item')             # initlitr%ditem
 MATERIAL_RE = re.compile('initlimt[0-9]+item')         # initlimt%ditem
 
-
 class ImportExportPanel(bpy.types.Panel):
     bl_label = 'import-export'
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'EI_Tools'
 
     def draw_header(self, context):
@@ -77,11 +91,11 @@ class ImportExportPanel(bpy.types.Panel):
         #export
         layout.label(text='~~~~~~~export~~~~~~~')
         row = layout.row()
-        row = row.split(percentage=0.8)
+        row = row.split(factor=0.8)
         row.prop(context.scene, 'DestinationDir')
         row.operator('object.choose_dir', text='...')
         row = layout.row()
-        row = row.split(percentage=0.75)
+        row = row.split(factor=0.75)
         row.prop(context.scene, 'LnkName')
         row.operator('object.export_only_lnk', text='*.lnk')
         row = layout.row()
@@ -94,7 +108,7 @@ class ImportExportPanel(bpy.types.Panel):
 class OperatorPanel(bpy.types.Panel):
     bl_label = 'Operations & options'
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'EI_Tools'
 
     def draw_header(self, context):
@@ -105,7 +119,7 @@ class OperatorPanel(bpy.types.Panel):
         layout = self.layout
         layout.label(text='~~~~~~~options~~~~~~~')
         row = layout.row()
-        split = row.split(percentage=0.35)
+        split = row.split(factor=0.35)
         left = split.column()
         #morphing
         left.label(text='Morphing')
@@ -113,7 +127,7 @@ class OperatorPanel(bpy.types.Panel):
         right.prop(context.scene, 'MorphType')
         if context.scene.MorphType != 'non':
             row = layout.row()
-            split = row.split(percentage=0.6)
+            split = row.split(factor=0.6)
             left = split.column()
             right = split.column()
             left.prop(context.scene, 'MorphComp')
@@ -124,7 +138,7 @@ class OperatorPanel(bpy.types.Panel):
         #object parameters
         if len(context.selected_objects) >= 1:
             row = layout.row()
-            split = row.split(percentage=0.5)
+            split = row.split(factor=0.5)
             left = split.column()
             left.prop(context.object, 'ei_group')
             right = split.column()
@@ -140,9 +154,9 @@ class OperatorPanel(bpy.types.Panel):
         layout.operator('object.clearscene', text='Clear scene')
         #<<uv>>
         row = layout.row()
-        split = row.split(percentage=0.7)
+        split = row.split(factor=0.7)
         left = split.column()
-        lsplit = left.split(percentage=0.5)
+        lsplit = left.split(factor=0.5)
         lleft = lsplit.column()
         lleft.operator('object.packuvcoords', text='<<')
         rleft = lsplit.column()
@@ -151,30 +165,30 @@ class OperatorPanel(bpy.types.Panel):
         right.operator('object.unpackuvcoords', text='>>')
         #type of select
         row = layout.row()
-        split = row.split(percentage=0.3)
+        split = row.split(factor=0.3)
         left = split.column()
         left.label(text='Select')
         right = split.column()
         right.prop(context.scene, 'selectType')
         if context.scene.selectType == 'mrph':
             row = layout.row()
-            split = row.split(percentage=0.8)
+            split = row.split(factor=0.8)
             left = split.column()
             left.label(text='click ok ;)')
             right = split.column()
             right.operator('object.applyselect', text='Ok')
         if context.scene.selectType == 'grp' or context.scene.selectType == 'txtrnmbr':
             row = layout.row()
-            split = row.split(percentage=0.85)
+            split = row.split(factor=0.85)
             left = split.column()
             right = split.column()  #ok
             right.operator('object.applyselect', text='Ok')
 
-            split1 = left.split(percentage=0.72)
+            split1 = left.split(factor=0.72)
             left1 = split1.column()
             right1 = split1.column() #max
             right1.prop(context.scene, 'selectMax')
-            split2 = left1.split(percentage=0.49)
+            split2 = left1.split(factor=0.49)
             left2 = split2.column() #min
             left2.prop(context.scene, 'selectMin')
             right2 = split2.column()
@@ -184,7 +198,7 @@ class OperatorPanel(bpy.types.Panel):
                 right2.label(text='t_number')
         #uv layers
         row = layout.row()
-        split = row.split(percentage=0.7)
+        split = row.split(factor=0.7)
         left = split.column()
         right = split.column()
         left.prop(context.scene, 'sameUV')
@@ -195,12 +209,12 @@ class OperatorPanel(bpy.types.Panel):
 class AnimationPanel(bpy.types.Panel):
     bl_label = 'animations'
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'EI_Tools'
 
     def draw_header(self, context):
         layout = self.layout
-        layout.label(text='', icon='POSE_DATA')
+        layout.label(text='', icon='POSE_HLT')
 
     def draw(self, context):
         layout = self.layout
@@ -219,22 +233,21 @@ def scene_clear():
     '''
     deletes objects and meshes data from scene
     '''
-    bpy.context.scene.layers = [i == 0 for i in range(20)]
-    for obj in bpy.data.objects:
-        obj.layers = [i == 0 for i in range(20)]
-        obj.select = True
-    bpy.ops.object.delete()
+    for col in bpy.data.collections:
+        bpy.data.collections.remove(col)
+    clean()
 
 def clean():
     '''
     cleans trash from objects and meshes data from scene without reloading scene
     '''
-    for rem_mesh in bpy.data.meshes:
-        if rem_mesh.users == 0:
-            bpy.data.meshes.remove(rem_mesh)
+    
     for rem_obj in bpy.data.objects:
         if rem_obj.users == 0:
             bpy.data.objects.remove(rem_obj)
+    for rem_mesh in bpy.data.meshes:
+        if rem_mesh.users == 0:
+            bpy.data.meshes.remove(rem_mesh)
 
 #todo lock object after format?
 def format_obj(cur_obj):
@@ -254,7 +267,7 @@ def format_obj(cur_obj):
     mesh = cur_obj.data
     blender_mesh = bmesh.new()
     blender_mesh.from_mesh(mesh)
-    bmesh.ops.triangulate(blender_mesh, faces=blender_mesh.faces[:], quad_method=0, ngon_method=0)
+    bmesh.ops.triangulate(blender_mesh, faces=blender_mesh.faces[:], quad_method='BEAUTY', ngon_method='BEAUTY')
     blender_mesh.to_mesh(mesh)
     blender_mesh.free()
 
@@ -265,7 +278,7 @@ def to_object_mode():
     scene = bpy.context.scene
     for obj in bpy.data.objects:
         if obj.type == 'MESH':
-            scene.objects.active = obj
+            bpy.context.view_layer.objects.active = obj
             bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
 def detect_morph(m_name, obj_type, morph_id):
@@ -313,7 +326,7 @@ def export_lnk(lnkpath):
     export_links = dict()
     root_mesh = ''
     for obj in bpy.data.objects:
-        if obj.parent is None and obj.name[0:2] not in MORPH_COMP.values():
+        if obj.parent is None and obj.name[0:2] not in MORPH_COMP:
             root_mesh = obj.name
             get_hierarchy(obj, export_links)
             break
@@ -418,17 +431,21 @@ def add_morph_comp(act_obj, morph_component):
     copys base object on new layer according to morphing prefix
     '''
     if (morph_component + act_obj.name) not in bpy.data.objects:
-        # copy object
+        # create copy of object
         new_obj = act_obj.copy()
         new_obj.data = act_obj.data.copy()
         new_obj.name = (morph_component + act_obj.name)
         new_obj.data.name = (morph_component + act_obj.name)
-        bpy.context.scene.objects.link(new_obj)
-        # place object in according to layer
+        scene = bpy.context.scene
+        scene.objects.link(new_obj)
         for i in MORPH_COMP:
             if MORPH_COMP[i] == morph_component:
-                new_obj.layers[i] = True
-                new_obj.layers[0] = False
+                if morph_component not in scene.collection.children:
+                    # make new collection for this morph component
+                    bpy.data.collections.new(MORPH_COLLECTION[i])
+                    scene.collection.children.link(MORPH_COLLECTION[i])
+                col = scene.collection.children[MORPH_COLLECTION[i]]
+                col.objects.link(new_obj)
     else:
         print(act_obj.name + ' it is a bad object to add morph component, try another object')
 
@@ -593,11 +610,8 @@ class RefreshTestTable(bpy.types.Operator):
         global BON_TABLE
         global MESH_LIST
         global POS_LIST
-        for obj in bpy.data.objects:
-            if obj.name[0:2] == MORPH_COMP[8]:
-                obj.select = True
-                bpy.ops.view3d.layers(nr=9, extend=False)
-                bpy.ops.object.delete()
+        if MORPH_COLLECTION[8] in bpy.context.scene.collection.children.keys():
+            bpy.data.collections.remove(bpy.data.collections[MORPH_COLLECTION[8]])
         clean()
         MESH_LIST = []
         POS_LIST = []
@@ -605,9 +619,9 @@ class RefreshTestTable(bpy.types.Operator):
         BON_TABLE.clear()
         to_object_mode()
 
-        #find base objects
+        # find base objects
         for obj in bpy.data.objects:
-            if obj.layers[0] and not obj.hide and obj.name[0:2] not in MORPH_COMP.values():
+            if obj.name in context.scene.collection.children[MORPH_COLLECTION[0]].objects and not obj.hide_get() and obj.name[0:2] not in MORPH_COMP:
                 MESH_LIST.append(MORPH_COMP[8] + obj.data.name)
                 POS_LIST.append(MORPH_COMP[8] + obj.name)
                 if obj.parent is None:
@@ -629,8 +643,11 @@ class RefreshTestTable(bpy.types.Operator):
         for t_ind in MESH_LIST:
             FIG_TABLE[t_ind].create_mesh('non')
             if t_ind in bpy.data.objects:
-                bpy.data.objects[t_ind].layers[8] = True
-                bpy.data.objects[t_ind].layers[0] = False
+                if MORPH_COLLECTION[8] not in bpy.context.scene.collection.children.keys():
+                    colTest = bpy.data.collections.new(MORPH_COLLECTION[8])
+                    bpy.context.scene.collection.children.link(colTest)
+                bpy.context.scene.collection.children[MORPH_COLLECTION[8]].objects.link(bpy.data.objects[t_ind])
+                bpy.context.scene.collection.children[MORPH_COLLECTION[0]].objects.unlink(bpy.data.objects[t_ind])
         create_hierarchy(tu_dict)
         for p_ind in POS_LIST:
             BON_TABLE[p_ind].set_pos('non')
@@ -648,11 +665,11 @@ class MorphOperators(bpy.types.Operator):
         new_links = dict()
         clean()
         for obj in bpy.data.objects:
-            if obj.name[0:2] not in MORPH_COMP.values():
+            if obj.name[0:2] not in MORPH_COMP:
                 if obj.parent is None:
                     get_hierarchy(obj, new_links)
         for obj in bpy.data.objects:
-            if obj.select and obj.name[0:2] not in MORPH_COMP.values():
+            if obj.select and obj.name[0:2] not in MORPH_COMP:
                 add_morph_comp(obj, prefix)
         # create new links of morphing components and make hierarchy
         morph_lnk = dict()
@@ -711,7 +728,7 @@ class ApplySelect(bpy.types.Operator):
     def execute(self, context):
         if context.scene.selectType == 'mrph':
             for obj in context.selected_objects:
-                if obj.name[0:2] in MORPH_COMP.values():
+                if obj.name[0:2] in MORPH_COMP:
                     find_name = obj.name[2:]
                 else:
                     find_name = obj.name
@@ -868,10 +885,13 @@ class EiMesh(object):
             for i in range(models_count):
                 morph_mesh = bpy.data.meshes.new(name=MORPH_COMP[i] + self.name)
                 morph_obj = bpy.data.objects.new(MORPH_COMP[i] + self.name, morph_mesh)
-                bpy.context.scene.objects.link(morph_obj)
+                if MORPH_COLLECTION[i] not in bpy.data.collections:
+                    collection = bpy.data.collections.new(MORPH_COLLECTION[i])
+                    bpy.context.scene.collection.children.link(collection)
+                bpy.data.collections[MORPH_COLLECTION[i]].objects.link(morph_obj)
                 #     #bug here: if you import model again figures on layers !=0 will be
                 #     #in (0,0,0) location. move it and press ctrl+z to fix it
-                morph_obj.layers = [lay == i for lay in range(20)]
+                #morph_obj.layers = [lay == i for lay in range(20)]
                 morph_obj.location = (0, 0, 0)
                 morph_mesh.from_pydata(self.verts[i], [], faces)
                 morph_obj['ei_group'] = self.header[7]
@@ -880,7 +900,7 @@ class EiMesh(object):
 
             # UV COORDINATES
             mesh = bpy.data.meshes[self.name]
-            mesh.uv_textures.new(self.name)
+            mesh.uv_layers.new(name='self.name')
             for uv_ind in range(self.header[3]):
                 for xy_ in range(2):
                     mesh.uv_layers[0].data[uv_ind].uv[xy_] = \
@@ -1183,7 +1203,7 @@ class ChooseDir(bpy.types.Operator):
     '''
     bl_label = 'Choose dir'
     bl_idname = 'object.choose_dir'
-    directory = bpy.props.StringProperty(subtype='DIR_PATH')
+    directory : bpy.props.StringProperty(subtype='DIR_PATH')
 
     def execute(self, context):
         bpy.context.scene.DestinationDir = self.directory
@@ -1224,7 +1244,7 @@ class EiExportOnlyFigs(bpy.types.Operator):
         scn = context.scene
         info = len(bpy.context.selected_objects)
         for obj in bpy.context.selected_objects:
-            if obj.data.name[0:2] not in MORPH_COMP.values():
+            if obj.data.name[0:2] not in MORPH_COMP:
                 format_obj(obj)
                 mesh = bpy.data.meshes[obj.data.name]
                 cur_m = EiMesh()
@@ -1251,7 +1271,7 @@ class EiExportOnlyBons(bpy.types.Operator):
         scn = bpy.context.scene
         info = len(bpy.context.selected_objects)
         for obj in bpy.context.selected_objects:
-            if obj.name[0:2] not in MORPH_COMP.values():
+            if obj.name[0:2] not in MORPH_COMP:
                 cur_b = EiBon()
                 cur_b.name = obj.name
                 cur_b.path = os.path.join(scn.DestinationDir, obj.name + '.bon')
@@ -1268,7 +1288,7 @@ class EIImport(bpy.types.Operator):
     bl_label = 'EI model import Operator'
     bl_idname = 'object.eimodelimport'
     bl_description = 'Import model from Evil Islands file'
-    filepath = bpy.props.StringProperty(subtype='FILE_PATH')
+    filepath : bpy.props.StringProperty(subtype='FILE_PATH')
 
     def execute(self, context):
         self.report({'INFO'}, 'executing import')
@@ -1441,7 +1461,7 @@ class EiImportAnimation(bpy.types.Operator):
     bl_label = 'EI model animation import Operator'
     bl_idname = 'object.eianimationimport'
     bl_description = 'Import model animation from Evil Islands'
-    filepath = bpy.props.StringProperty(subtype='FILE_PATH')
+    filepath : bpy.props.StringProperty(subtype='FILE_PATH')
 
     def execute(self, context):
         self.report({'INFO'}, 'executing import')
@@ -1520,8 +1540,35 @@ class testButton(bpy.types.Operator):
 ##########################################################################
 ##########################################################################
 
+classes = (
+ApplySelect,
+ChooseDir,
+ClearScene,
+#EiAnimation,
+#EiBon,
+EiExportOnlyBons,
+EiExportOnlyFigs,
+EiExportOnlyLnk,
+EIImport,
+EiImportAnimation,
+#EiMesh,
+ImportExportPanel,
+MorphOperators,
+OperatorPanel,
+AnimationPanel,
+PackUv,
+RefreshTestTable,
+SetSameUvLayerName,
+testButton,
+UnpackUv
+)
+
 def register():
-    bpy.utils.register_module(__name__)
+    from bpy.utils import register_class
+    for _cls in classes:
+        print ('reg class: ' + str(_cls))
+        register_class(_cls)
+
     bpy.types.Scene.scalefig = bpy.props.FloatProperty(
         name='scale',
         default=2,
@@ -1635,7 +1682,10 @@ def register():
         update=ei_set_texture_number)
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    from bpy.utils import unregister_class
+    for _cls in classes:
+        unregister_class(_cls)
+
     bpy.types.Scene.scalefig
     bpy.types.Scene.scale
     bpy.types.Scene.selectType
