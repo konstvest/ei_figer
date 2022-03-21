@@ -306,10 +306,15 @@ def is_model_correct():
         print('collection number must correspond Model type count (now: '+ str(obj_count) +')')
         return False
 
+    root_list = []
+
     for obj in collections[0].objects:
         if obj.type != 'MESH':
             continue
         
+        if obj.parent is None:
+            root_list.append(obj.name)
+
         mesh : bpy.types.Mesh = obj.data
         if mesh.uv_layers.active_index < 0:
             print('mesh ' + mesh.name + ' has no active uv layer (UV map)')
@@ -319,7 +324,10 @@ def is_model_correct():
             if (model().morph_comp[i] + obj.name) not in collections[i].objects:
                 print('cannot find object: ' + model().morph_comp[i] + obj.name)
                 return False
-            
+
+    if len(root_list) != 1:
+        print('incorrect root objects, mus be only one, exist: ' + str(root_list))
+
     return True
 
 def collect_links():

@@ -358,8 +358,8 @@ class CExport_OP_operator(bpy.types.Operator):
     def execute(self, context):
         self.report({'INFO'}, 'Executing export')
         res_path = bpy.context.scene.res_file
-        if not res_path or not os.path.exists(res_path):
-            self.report({'ERROR'}, 'res file not found at:' + res_path)
+        if not res_path:
+            self.report({'ERROR'}, 'res file empty')
             return {'CANCELLED'}
 
         model_name : bpy.props.StringProperty = bpy.context.scene.figmodel_name
