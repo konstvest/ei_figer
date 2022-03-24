@@ -263,6 +263,7 @@ class CImport_OP_operator(bpy.types.Operator):
         # elif model_name in resFile.get_filename_list() and model_name.lower().endswith('.lnk'): # ONLY for lnk import
         elif (model_name + '.lnk') in resFile.get_filename_list():
             # read lnk, fig, bone in source res file, not from .mod
+            active_model.reset('fig')
             active_model.name = model_name
             err = read_links(resFile, model_name + '.lnk')
             renamed_dict = dict()
@@ -383,14 +384,20 @@ class CExport_OP_operator(bpy.types.Operator):
                 with res.open(active_model.name + '.lnk', 'w') as file:
                     data = active_model.links.write_lnk()
                     file.write(data)
-                fig = active_model.mesh_list[0]
-                with res.open(fig.name, 'w') as file:
-                    data = fig.write_fig()
-                    file.write(data)
-                bon = active_model.pos_list[0]
-                with res.open(bon.name, 'w') as file:
-                    data = bon.write_bon()
-                    file.write(data)
+            #write figs
+            with ResFile(res_path, 'a') as res:
+                for mesh in active_model.mesh_list:
+                    mesh.name = model_name + mesh.name + '.fig'
+                    with res.open(mesh.name, 'w') as file:
+                        data = mesh.write_fig()
+                        file.write(data)
+            #write bones
+            with ResFile(res_path, 'a') as res:
+                for bone in active_model.pos_list:
+                    bone.name = model_name + bone.name + '.bon'
+                    with res.open(bone.name, 'w') as file:
+                        data = bone.write_bon()
+                        file.write(data)
         else:
             # prepare links + figures (.mod file)
             model_res = io.BytesIO()

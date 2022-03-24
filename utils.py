@@ -65,12 +65,18 @@ class CItemGroupContainer:
             ,CItemGroup('shop weapons/armors', re.compile(r'init(we|ar)[a-zA-Z]+[0-9]+'), 1, 18, 8, 1)
             ,CItemGroup('interactive game objects', re.compile(r'ingm[0-9]+'), 0, 22, 8, 1)
             ,CItemGroup('faces', re.compile(r'infa[0-9]+'), 0, 22, 8, 1)
-            ,CItemGroup('world objects', re.compile(r'.+'), 0, 18, 8, 8)
+            ,CItemGroup('helms', re.compile(r'hd\.armor\d+'), 0, 19, 2, 8)
+            ,CItemGroup('arrows', re.compile(r'quiver|arrows'), 0, 19, 2, 8)
+            ,CItemGroup('weapons', re.compile(r'(\.(pike|sword|dagger|club|axe|crbow|bw\D+)|^crbow|^bw\D+)\d+'), 0, 18, 2, 8)
+            ,CItemGroup('armor', re.compile(r'\.armor\d+'), 0, 19, 1, 8)
+            ,CItemGroup('unit', re.compile(r'un(an|mo|hu|or).+'), 0, 19, 1, 8)
+
+            ,CItemGroup('world objects', re.compile(r'.+'), 0, 18, 8, 8) #LAST
             ]
     
     def get_item_group(self, obj_name : str):
         for item in self.item_type:
-            if item.mask.match(obj_name) is not None:
+            if item.mask.search(obj_name) is not None:
                 return item
         #assert!!!!
         return None

@@ -133,6 +133,8 @@ class CFigure(object):
             print('indices count corrupted')
         if len(self.m_c) != self.header[5]:
             print('morph components count corrupted')
+        if len(self.center) != 8 or len(self.fmin) != 8 or len(self.fmax) != 8 or len(self.center) != 8:
+            print('aux data components count corrupted')
         raw_data += pack('4s', b'FIG8')
         # header
         for header_ind in range(9):
@@ -171,9 +173,9 @@ class CFigure(object):
         for ind in self.indicies:
             raw_data += pack('h', ind)
         # vertex components
-        for i in range(self.header[4]):
-            raw_data += pack('h', self.v_c[i][0]) #TODO: save real data instead copy of 0 element
-            raw_data += pack('hh', self.v_c[i][0], self.v_c[i][1])
+        for vec in self.v_c:
+            raw_data += pack('h', vec[0]) #TODO: save real data instead copy of 0 element
+            raw_data += pack('hh', vec[0], vec[1])
         # morphing components
         for vec in self.m_c:
             raw_data += pack('%sh' % len(vec), *vec)
@@ -292,6 +294,14 @@ class CFigure(object):
     def fillVertices(self):
         for i in range(1, 8):
             self.verts[i] = self.verts[0]
+
+    def fillAux(self):
+        for i in range(1, 8):
+            self.fmin.append(self.fmin[0])
+            self.fmax.append(self.fmax[0])
+            self.center.append(self.center[0])
+            self.radius.append(self.radius[0])
+
 
     def generate_m_c(self):
         self.m_c = []

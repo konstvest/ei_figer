@@ -18,6 +18,7 @@ import copy
 from math import sqrt
 from mathutils import Quaternion
 import copy as cp
+import collections
 
 from . utils import sumVector, CItemGroupContainer, mulVector, sumVector
 from . bone import CBone
@@ -326,9 +327,36 @@ def is_model_correct():
                 return False
 
     if len(root_list) != 1:
-        print('incorrect root objects, mus be only one, exist: ' + str(root_list))
+        print('incorrect root objects, must be only one, exist: ' + str(root_list))
 
     return True
+
+def parts_ordered(links : dict[str, str], links_out : dict[str, str], root):
+    '''
+    converts hierarchy to ordered list
+    '''
+    candidates=dict()
+    if links[root] is None:
+        links_out[root] = None
+
+    for child, parent in links.items():
+        if parent is None:
+            continue
+
+        if parent == root:
+            candidates[child] = parent
+
+    #alphabetical dict sort
+    od = collections.OrderedDict(sorted(candidates.items()))
+    #len(key) dict sort
+    new_d = {}
+    for k in sorted(od, key=len):
+        new_d[k] = od[k]
+
+    for child, parent in new_d.items():
+        links_out[child] = parent
+        parts_ordered(links, links_out, child)
+    
 
 def collect_links():
     lnk = CLink()
@@ -338,6 +366,10 @@ def collect_links():
         if obj.type != 'MESH':
             continue
         lnk.add(obj.name, obj.parent.name if obj.parent is not None else None)
+
+    lnk_ordered : dict[str, str] = dict()
+    parts_ordered(lnk.links, lnk_ordered, lnk.root)
+    lnk.links = lnk_ordered
     model().links = lnk
 
 def collect_pos():
@@ -354,11 +386,10 @@ def collect_pos():
             morph_obj = collections[i].objects[model().morph_comp[i] + obj.name]
             bone.pos.append(morph_obj.location[:])
         
+        bone.name = obj.name
         if obj_count == 1:
-            bone.name = model().name + obj.name + '.bon'
             bone.fillPositions()
-        else:
-            bone.name = obj.name
+
         model().pos_list.append(bone)
     return err
 
@@ -368,12 +399,19 @@ def collect_mesh():
     obj_count = item.morph_component_count
     collections = bpy.context.scene.collection.children
 
+    individual_group=['helms', 'second layer', 'arrows', 'weapons', 'armor']
+
     for obj in collections[0].objects:
         if obj.type != 'MESH':
             continue
         figure = CFigure()
-        figure.header[7] = item.ei_group
-        figure.header[8] = item.t_number
+        obj_group = CItemGroupContainer().get_item_group(obj.name)
+        if obj_group.type in individual_group:
+            figure.header[7] = obj_group.ei_group
+            figure.header[8] = obj_group.t_number
+        else:
+            figure.header[7] = item.ei_group
+            figure.header[8] = item.t_number
         for i in range(obj_count):
             #TODO: if object has no this morph comp, use previous components (end-point: base)
             morph_mesh : bpy.types.Mesh = collections[i].objects[model().morph_comp[i] + obj.name].data
@@ -499,11 +537,11 @@ def collect_mesh():
                 figure.header[2] = len(figure.t_coords)
                 figure.header[3] = ind_count
         
+        figure.name = obj.name
         if obj_count == 1:
-            figure.name = model().name + obj.name + '.fig'
             figure.fillVertices()
-        else:
-            figure.name = obj.name
+            figure.fillAux()
+            
             
         model().mesh_list.append(figure)
 
