@@ -469,7 +469,7 @@ def collect_mesh():
             # align vertices
             v_restore = (4 - (count_vert % 4)) % 4 # fill count until %4 will be 0
             for _ in range(v_restore):
-                figure.verts[i].append(tuple(0.0, 0.0, 0.0))
+                figure.verts[i].append((0.0, 0.0, 0.0))
                 count_vert += 1
             
             if i == 0: # ONLY FOR BASE OBJECT

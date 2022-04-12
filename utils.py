@@ -104,7 +104,7 @@ def subVector(vec1, vec2): #subtract vec2 from vec1
 
     result = []
     for i in range(len(vec2)):
-        result.append(vec2[i] - vec1[i])
+        result.append(vec1[i] - vec2[i])
     return result
 
 def mulVector(vec1, scalar): #multiply vector with scalar
