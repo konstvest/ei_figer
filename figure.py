@@ -161,9 +161,11 @@ class CFigure(object):
             block_index += 4
         # normals
         block_index = 0
-        
-        for vec in self.normals: 
-            raw_data += pack('%sf' % len(vec), *vec)
+        for _ in range(self.header[1]):
+            for xyzw in range(4):
+                    for cur_block_ind in range(4):
+                        raw_data += pack('f', self.normals[block_index + cur_block_ind][xyzw])
+            block_index += 4
         # texture coordinates
         pack_uv(self.t_coords, get_uv_convert_count(self.name))
         
