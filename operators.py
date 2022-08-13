@@ -382,20 +382,23 @@ class CAnimation_OP_Export(bpy.types.Operator):
         collect_animations()
         blender2abs_rotations()
         abs2ei_rotations()
-        #write_animations()
-        if True:
+
+        def write_animations():
+            nonlocal res_path
+            nonlocal anm_name
+            nonlocal model_name
+
             #pack crrent animation first. byte array for each part (lh1, lh2, etc)
             anm_res = io.BytesIO()
             with ResFile(anm_res, 'w') as res:
-                # write animation
                 for part in active_model.anm_list:
                     with res.open(part.name, 'w') as file:
                         data = part.write_anm()
                         file.write(data)
 
+            # read all animation data(uattack, udeath and etc) from figures
             anm_name = anm_name
             model_name = model_name + '.anm'
-            # read all animation data(uattack, udeath and etc) from figures
             data = {}
             with (
                 ResFile(res_path, "r") as figres,
@@ -405,8 +408,10 @@ class CAnimation_OP_Export(bpy.types.Operator):
                 for info in res.iter_files():
                     with res.open(info.name) as file:
                         data[info.name] = file.read()
-            data[anm_name] = anm_res.getvalue()
+            
+            data[anm_name] = anm_res.getvalue() #modified animation set
 
+            #write animations into res file
             with (
                 ResFile(res_path, "a") as figres,
                 figres.open(model_name, "w") as anmfile,
@@ -416,6 +421,10 @@ class CAnimation_OP_Export(bpy.types.Operator):
                     with res.open(name, "w") as file:
                         file.write(anm_data)
 
+            print(res_path + 'saved')
+
+
+        write_animations()
 
         self.report({'INFO'}, 'Done')
         return {'FINISHED'}

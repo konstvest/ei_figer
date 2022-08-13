@@ -169,17 +169,18 @@ class ResFile:
         if not self._file:
             return
 
-        if self._subfile:
-            if self._subfile.mode != 'r':
-                raise ValueError("can't close the ResFile while there is an opened subfile")
-            self._close_subfile()
+        try:
+            if self._subfile:
+                if self._subfile.mode != 'r':
+                    raise ValueError("can't close the ResFile while there is an opened subfile")
+                self._close_subfile()
 
-        if self._mode != 'r':
-            self._write_headers()
-
-        if self._opened:
-            self._file.close()
-        self._file = None
+            if self._mode != 'r':
+                self._write_headers()
+        finally:
+            if self._opened:
+                self._file.close()
+            self._file = None
 
     def _write_alignment(self):
         end_of_files_data = (
