@@ -78,4 +78,5 @@ class ANIMATION_PT_PANEL(bpy.types.Panel):
         #layout.label(text='Animations')
         layout.prop(context.scene, 'animation_name')
         layout.operator('object.animation_import', text='Import')
-        #TODO: export animations
+        layout.operator('object.animation_export', text='Export')
+

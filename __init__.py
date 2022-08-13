@@ -16,7 +16,7 @@
 bl_info = {
     'name': 'EI figer',
     'author': 'konstvest',
-    'version': (4, 3),
+    'version': (5, 0),
     'blender': (3, 0, 0),
     'location': '',
     'description': 'Addon for import/export models from Evil Islands to Blender',
@@ -42,6 +42,7 @@ CChooseResFile,
 CAddMorphComp_OP_Operator,
 CImport_OP_operator,
 CAnimation_OP_import,
+CAnimation_OP_Export,
 CExport_OP_operator,
 CAutoFillMorph_OP_Operator
 )

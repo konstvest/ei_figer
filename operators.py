@@ -345,11 +345,81 @@ class CAnimation_OP_import(bpy.types.Operator):
         active_model.reset('anm')
 
         read_animations(resFile, model_name, anm_name)
-        calc_absolute_rotation()
-        recalc_rotations()
+        ei2abs_rorations()
+        abs2Blender_rotations()
         insert_animation(active_model.anm_list)
         self.report({'INFO'}, 'Done')
         return {'FINISHED'}
+
+
+class CAnimation_OP_Export(bpy.types.Operator):
+    bl_label = 'EI animation export Operator'
+    bl_idname = 'object.animation_export'
+    bl_description = 'Export Animations for model'
+
+    def execute(self, context):
+        self.report({'INFO'}, 'Executing annimation export')
+        res_path = bpy.context.scene.res_file
+        if not res_path or not os.path.exists(res_path):
+            self.report({'ERROR'}, 'Res file not found at:' + res_path)
+            return {'CANCELLED'}  
+
+        anm_name = bpy.context.scene.animation_name
+        model_name = bpy.context.scene.figmodel_name
+        #resFile = ResFile(res_path)
+        
+        if not model_name:
+            self.report({'ERROR'}, 'Model/Figure name is empty')
+            return {'CANCELLED'}
+
+        if not anm_name:
+            self.report({'ERROR'}, 'Animation name is empty')
+            return {'CANCELLED'}
+        
+        active_model : CModel = bpy.types.Scene.model
+        active_model.reset('anm')
+        collect_links()
+        collect_animations()
+        blender2abs_rotations()
+        abs2ei_rotations()
+        #write_animations()
+        if True:
+            #pack crrent animation first. byte array for each part (lh1, lh2, etc)
+            anm_res = io.BytesIO()
+            with ResFile(anm_res, 'w') as res:
+                # write animation
+                for part in active_model.anm_list:
+                    with res.open(part.name, 'w') as file:
+                        data = part.write_anm()
+                        file.write(data)
+
+            anm_name = anm_name
+            model_name = model_name + '.anm'
+            # read all animation data(uattack, udeath and etc) from figures
+            data = {}
+            with (
+                ResFile(res_path, "r") as figres,
+                figres.open(model_name, "r") as anmfile,
+                ResFile(anmfile, "r") as res
+                ):
+                for info in res.iter_files():
+                    with res.open(info.name) as file:
+                        data[info.name] = file.read()
+            data[anm_name] = anm_res.getvalue()
+
+            with (
+                ResFile(res_path, "a") as figres,
+                figres.open(model_name, "w") as anmfile,
+                ResFile(anmfile, "w") as res
+                ):
+                for name, anm_data in data.items():
+                    with res.open(name, "w") as file:
+                        file.write(anm_data)
+
+
+        self.report({'INFO'}, 'Done')
+        return {'FINISHED'}
+
         
 class CExport_OP_operator(bpy.types.Operator):
     bl_label = 'EI model export Operator'
@@ -429,8 +499,3 @@ class CExport_OP_operator(bpy.types.Operator):
             print('resfile ' + res_path + ' saved')
         self.report({'INFO'}, 'Done')
         return {'FINISHED'}
-
-todo_export="""
-3. let user save animations separately
-4. save animations into figures.res
-"""

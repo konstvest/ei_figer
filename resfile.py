@@ -104,6 +104,9 @@ class _ResSubFile(io.BufferedIOBase):
         if self.closed:  # pylint: disable=using-constant-test
             raise ValueError(f'{operation} on closed file')
 
+    def truncate(self):
+        pass
+
 
 class ResFile:
 

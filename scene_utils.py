@@ -97,7 +97,7 @@ def read_animations(resFile : ResFile, model_name : str, animation_name : str):
                     active_model.anm_list.append(anm)
     return err
 
-def calc_absolute_rotation():
+def ei2abs_rorations():
     """
     Calculates absolute rotations based on EI values
     """
@@ -129,7 +129,30 @@ def calc_absolute_rotation():
 
     return 0
 
-def recalc_rotations():
+def abs2ei_rotations():
+    active_model : CModel = bpy.types.Scene.model
+    lnk = active_model.links.links
+
+    def calc_frames(part : CAnimation):
+        nonlocal lnk
+        
+        if lnk[part.name] is None:
+            return
+        
+        for i in range(len(part.rotations)):
+            parent_rot = cp.deepcopy(active_model.animation(lnk[part.name]).abs_rotation[i])
+            parent_rot_invert = parent_rot.inverted().copy()
+            parent_rot_invert.rotate(part.abs_rotation[i])
+            part.rotations[i] = parent_rot_invert.copy()
+    
+    for part in lnk.keys():
+        anm = active_model.animation(part)
+        if anm is None:
+            print('animation for ' + part + ' not found')
+        else:
+            calc_frames(anm)
+
+def abs2Blender_rotations():
     """
     Calculates rotation from absolute to Blender
     """
@@ -156,6 +179,35 @@ def recalc_rotations():
             print('animation for ' + part + ' not found')
         else:
             calc_frames(anm)
+
+def blender2abs_rotations():
+    active_model : CModel = bpy.types.Scene.model
+    lnk = active_model.links.links
+    #TODO: check if links correctly (None parent has only 1 obj and other)
+    if not active_model.links:
+        return 1
+
+    def calc_frames(part : CAnimation):
+        nonlocal lnk
+        
+        if lnk[part.name] is None: #root object
+            part.abs_rotation = cp.deepcopy(part.rotations)
+        else:
+            parent_anm = active_model.animation(lnk[part.name])
+            if len(parent_anm.abs_rotation) == 0:
+                calc_frames(parent_anm)
+            part.abs_rotation = cp.deepcopy(part.rotations)
+            for i in range(len(part.rotations)):
+                part.abs_rotation[i].rotate(parent_anm.abs_rotation[i])
+    
+    for part in lnk.keys():
+        anm = active_model.animation(part)
+        if anm is None:
+            print('animation for ' + part + ' not found')
+        else:
+            calc_frames(anm)
+
+    return 0
 
 def create_mesh_2(figure:CFigure):
     active_model : CModel = bpy.context.scene.model
@@ -278,6 +330,35 @@ def insert_animation(anm_list : list[CAnimation]):
                 insert_keyframe(key, frame)
 
     return err
+
+def collect_animations():
+    active_model : CModel = bpy.types.Scene.model
+    for obj in bpy.data.objects:
+        if obj.name[0:2] in bpy.types.Scene.model.morph_comp.values():
+            continue #skip morphed objects
+
+        anm = CAnimation()
+        anm.name = obj.name
+        obj.rotation_mode = 'QUATERNION'
+        
+        for frame in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
+            #rotations
+            bpy.context.scene.frame_set(frame) #choose frame
+            anm.rotations.append(Quaternion(obj.rotation_quaternion))
+            #positions
+            if obj.parent is None: #root
+                anm.translations.append(obj.location.copy())
+            #morphations
+        # if len(part.morphations) > 0:
+        #     obj.shape_key_add(name='basis', from_mix=False)
+        #     for frame in range(len(part.morphations)):
+        #         key = obj.shape_key_add(name=str(frame), from_mix=False)
+        #         for i in range(len(part.morphations[frame])):
+        #             key.data[i].co = sumVector(obj.data.vertices[i].co, part.morphations[frame][i])
+        #         insert_keyframe(key, frame)
+        active_model.anm_list.append(anm)
+
+
 
 def create_hierarchy(links : dict[str, str]):
     '''
