@@ -32,8 +32,8 @@ class IMPORT_EXPORT_PT_PANEL(bpy.types.Panel):
         elem.operator('object.choose_resfile', text='...')
         #layout.label(text='Models and Figures')
         layout.prop(context.scene, 'figmodel_name')
-        layout.operator('object.model_import', text='import')
-        layout.operator('object.model_export', text='export')
+        layout.operator('object.model_import', text='Import')
+        layout.operator('object.model_export', text='Export')
 
 
 class OPERATOR_PT_PANEL(bpy.types.Panel):

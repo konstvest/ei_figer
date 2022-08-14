@@ -98,11 +98,13 @@ class CAddMorphComp_OP_Operator(bpy.types.Operator):
             if previous_col_name not in scene.collection.children:
                 self.report({'ERROR'}, 'Previous collection \"'+ previous_col_name +'\" does not exist')
                 return {'CANCELLED'}
-
+        
+        bExist = False
         for obj in bpy.context.selected_objects:
             true_name = get_true_name(obj.name)
             if (prefix + true_name) in bpy.data.objects:
                 print(obj.name + ' already have this morph comp')
+                bExist = True
                 continue
             
             # save links
@@ -126,7 +128,7 @@ class CAddMorphComp_OP_Operator(bpy.types.Operator):
             new_obj.select_set(False)
         
         if not links:
-            self.report({'ERROR'}, 'Empty objects to copy. Please select objects')
+            self.report({'ERROR'}, 'Object(s) already have these morph components' if bExist else 'Empty objects to copy. Please select objects')
             return {'CANCELLED'}
 
         for child, parent in links.items():
