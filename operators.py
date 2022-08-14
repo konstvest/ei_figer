@@ -18,7 +18,6 @@ import io
 from bpy_extras.io_utils import ImportHelper
 from . figure import CFigure
 from . bone import CBone
-from . animation import CAnimation
 from . links import CLink
 from . utils import *
 from . scene_management import CModel

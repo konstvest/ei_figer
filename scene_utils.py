@@ -20,7 +20,7 @@ from mathutils import Quaternion
 import copy as cp
 import collections
 
-from . utils import sumVector, CItemGroupContainer, mulVector, sumVector
+from . utils import subVector, sumVector, CItemGroupContainer, mulVector, sumVector
 from . bone import CBone
 from . figure import CFigure
 from . resfile import ResFile
@@ -348,14 +348,25 @@ def collect_animations():
             #positions
             if obj.parent is None: #root
                 anm.translations.append(obj.location.copy())
+            
             #morphations
-        # if len(part.morphations) > 0:
-        #     obj.shape_key_add(name='basis', from_mix=False)
-        #     for frame in range(len(part.morphations)):
-        #         key = obj.shape_key_add(name=str(frame), from_mix=False)
-        #         for i in range(len(part.morphations[frame])):
-        #             key.data[i].co = sumVector(obj.data.vertices[i].co, part.morphations[frame][i])
-        #         insert_keyframe(key, frame)
+            if not obj.data.shape_keys:
+                continue
+
+            if not len(anm.morphations):
+                anm.morphations = [[] for _ in range(bpy.context.scene.frame_end - bpy.context.scene.frame_start + 1)]
+
+            #check if 'basis' morph exists
+            basis_block = obj.data.shape_keys.key_blocks['basis']
+            block = obj.data.shape_keys.key_blocks[str(frame)]
+            if block.value != 1.0:
+                print(f'{obj.name} incorrect moorph value')
+            
+            for i in range(len(block.data)):
+                #dif = subVector(block.data[i].co, basis_block.data[i].co)
+                anm.morphations[frame].append(subVector(block.data[i].co, basis_block.data[i].co))
+
+
         active_model.anm_list.append(anm)
 
 

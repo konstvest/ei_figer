@@ -51,7 +51,7 @@ class CModel():
             self.mesh_list : list[CFigure] = list()
             self.pos_list : list[CBone] = list()
         if type == 'anm' or type == 'all':
-            self.links = CLink()
+            #self.links = CLink()
             self.anm_list : list[CAnimation] = list()
 
     def is_morph_name(self, name: str):
