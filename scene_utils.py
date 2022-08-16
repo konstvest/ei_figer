@@ -337,6 +337,9 @@ def collect_animations():
         if obj.name[0:2] in bpy.types.Scene.model.morph_comp.values():
             continue #skip morphed objects
 
+        if obj.animation_data is None:
+            continue
+        
         anm = CAnimation()
         anm.name = obj.name
         obj.rotation_mode = 'QUATERNION'
