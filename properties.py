@@ -73,6 +73,13 @@ def register_props():
         update=calculate_mesh
     )
 
+    scene.auto_fix = bpy.props.BoolProperty(
+        name='auto_fix',
+        description='This option allows to triangulate model, and switch to object mode automatically before export.\n\
+Can be useful if you get unexpected scaling, rotations or holes. It can decrease performance, use it at your own risk.',
+        default=False
+    )
+
     scene.model = CModel()
 
 def unregister_props():

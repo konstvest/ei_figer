@@ -82,7 +82,7 @@ class CRefreshTestTable(bpy.types.Operator):
 class CAddMorphComp_OP_Operator(bpy.types.Operator):
     bl_label = 'EI Add Morphing Components'
     bl_idname = 'object.addmorphcomp'
-    bl_description = 'Copy selected objects as morphing component: '
+    bl_description = 'Copy selected objects as morphing component'
 
     def execute(self, context):
         prefix = bpy.context.scene.morph_comp
@@ -255,13 +255,6 @@ class CImport_OP_operator(bpy.types.Operator):
             create_links_2(active_model.links)
             for bone in active_model.pos_list:
                 set_pos_2(bone)
-        # elif (model_name + '.fig') in resFile.get_filename_list():
-        #     active_model.reset('fig')
-        #     active_model.name = model_name
-        #     read_figure(resFile, model_name + '.fig')
-        #     for fig in active_model.mesh_list:
-        #         create_mesh_2(fig)
-        # elif model_name in resFile.get_filename_list() and model_name.lower().endswith('.lnk'): # ONLY for lnk import
         elif (model_name + '.lnk') in resFile.get_filename_list():
             # read lnk, fig, bone in source res file, not from .mod
             active_model.reset('fig')
@@ -288,8 +281,10 @@ class CImport_OP_operator(bpy.types.Operator):
                         read_bone(resFile, part + '.bon')
                     else:
                         print(part + '.bon not found')
+
             for fig in active_model.mesh_list:
                 create_mesh_2(fig)
+
             create_links_2(active_model.links)
             for bone in active_model.pos_list:
                 set_pos_2(bone)
@@ -298,6 +293,7 @@ class CImport_OP_operator(bpy.types.Operator):
             for name in resFile.get_filename_list():
                 if name.lower().endswith('.mod') or name.lower().endswith('.lnk'):
                     item_list.append(name.rsplit('.')[0])
+
             self.report({'ERROR'}, 'Can not find ' + model_name +\
                 '\nItems list: ' + str(item_list))
             return {'CANCELLED'}
@@ -451,6 +447,11 @@ class CExport_OP_operator(bpy.types.Operator):
         active_model : CModel = bpy.types.Scene.model
         active_model.name = model_name
         active_model.reset()
+
+        bAutofix = bpy.context.scene.auto_fix
+        if bAutofix:
+            auto_fix_scene()
+
         if not is_model_correct():
             self.report({'ERROR'}, 'Model/Figure cannot pass check. \nSee System Console (Window->Toggle System Console)')
             return {'CANCELLED'}

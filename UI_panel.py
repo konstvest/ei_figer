@@ -30,10 +30,11 @@ class IMPORT_EXPORT_PT_PANEL(bpy.types.Panel):
         elem = row.split(factor=0.8)
         elem.prop(context.scene, 'res_file')
         elem.operator('object.choose_resfile', text='...')
-        #layout.label(text='Models and Figures')
         layout.prop(context.scene, 'figmodel_name')
         layout.operator('object.model_import', text='Import')
-        layout.operator('object.model_export', text='Export')
+        row = layout.split()
+        row.prop(context.scene, 'auto_fix')
+        row.operator('object.model_export', text='Export')
 
 
 class OPERATOR_PT_PANEL(bpy.types.Panel):

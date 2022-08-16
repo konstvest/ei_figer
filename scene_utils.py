@@ -289,7 +289,7 @@ def clear_animation_data():
             obj.location = (0, 0, 0)
         obj.shape_key_clear()
 
-    bpy.context.scene.frame_end = 1
+    bpy.context.scene.frame_start = 1
     bpy.context.scene.frame_end = 250
 
 def insert_keyframe(sk, f):
@@ -366,9 +366,7 @@ def collect_animations():
                 print(f'{obj.name} incorrect moorph value')
             
             for i in range(len(block.data)):
-                #dif = subVector(block.data[i].co, basis_block.data[i].co)
                 anm.morphations[frame].append(subVector(block.data[i].co, basis_block.data[i].co))
-
 
         active_model.anm_list.append(anm)
 
@@ -680,21 +678,7 @@ def scene_clear():
     bpy.context.scene.frame_end = 250
     bpy.context.scene.frame_set(1)
 
-#todo lock object after format?
-def format_obj(cur_obj):
-    '''
-    checks transformation of current object and triangulate it
-    '''
-    quat_rot = cur_obj.rotation_quaternion
-    sca = cur_obj.scale
-    bpy.ops.object.rotation_clear()
-    bpy.ops.object.scale_clear()
-    if quat_rot != cur_obj.rotation_quaternion:
-        print('WARNING: return operation and apply rotation to ' + cur_obj.name)
-    if sca != cur_obj.scale:
-        print('WARNING: return operation and apply scale to ' + cur_obj.name)
-
-    # trianfulate obj
+def triangulate(cur_obj):
     mesh = cur_obj.data
     blender_mesh = bmesh.new()
     blender_mesh.from_mesh(mesh)
@@ -740,9 +724,9 @@ def calculate_mesh(self, context):
     '''
     calculates test unit using data (str, dex, height) from scene
     '''
-    q_str = context.scene.MeshStr
-    q_dex = context.scene.MeshDex
-    q_height = context.scene.MeshHeight
+    q_str = context.scene.mesh_str
+    q_dex = context.scene.mesh_dex
+    q_height = context.scene.mesh_height
     for t_mesh in bpy.types.Scene.model.mesh_list:
         if t_mesh in bpy.data.meshes:
             m_verts = bpy.types.Scene.model.fig_table[t_mesh].verts
@@ -772,3 +756,20 @@ def calculate_mesh(self, context):
                 value2 = temp1 + (temp2 - temp1) * q_dex
                 final = value1 + (value2 - value1) * q_height
                 bpy.data.objects[t_pos].location[i] = final
+
+def auto_fix_scene():
+    # switch to object mode first
+    to_object_mode()
+
+    # clear select
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
+
+    for obj in bpy.data.objects:
+        # apply transformations
+        obj.select_set(True)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+        triangulate(obj)
+
+    # copy empty components
+    pass
