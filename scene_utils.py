@@ -339,7 +339,7 @@ def collect_animations():
 
         if obj.animation_data is None:
             continue
-        
+
         anm = CAnimation()
         anm.name = obj.name
         obj.rotation_mode = 'QUATERNION'
@@ -388,7 +388,6 @@ def create_hierarchy(links : dict[str, str]):
             print(str(key) + ': object not found in scene, but found in links of hierarchy')
 
 def is_model_correct():
-
     obj_count = CItemGroupContainer().get_item_group(model().name).morph_component_count
     collections = bpy.context.scene.collection.children
     if len(collections) < 0:
@@ -404,6 +403,7 @@ def is_model_correct():
 
     root_list = []
 
+    #check if root object only 1
     for obj in collections[0].objects:
         if obj.type != 'MESH':
             continue
@@ -423,6 +423,12 @@ def is_model_correct():
 
     if len(root_list) != 1:
         print('incorrect root objects, must be only one, exist: ' + str(root_list))
+
+    #check assembly name
+    for obj in collections[0].objects:
+        if obj.name == model().name:
+            print(f'object {obj.name} must not be the same as model name. input another name for model or object')
+            return False
 
     return True
 
