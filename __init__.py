@@ -19,7 +19,7 @@ bl_info = {
     'version': (5, 1),
     'blender': (3, 0, 0),
     'location': '',
-    'description': 'Addon for import/export models from Evil Islands to Blender',
+    'description': 'Addon for import/export models and animations from Evil Islands game to Blender',
     'wiki_url': '',
     'tracker_url': 'https://github.com/konstvest/ei_figer',
     'category': 'Import-Export'}
