@@ -565,6 +565,12 @@ def collect_mesh():
             if count_vert != 0 and i == 0:
                 figure.header[5] = count_vert
                 figure.generate_m_c()
+            
+            #move min/max to center of model for world objects
+            if obj_group.type == 'world objects':
+                figure.fmin[-1] = tuple(subVector(figure.fmin[-1], figure.center[-1]))
+                figure.fmax[-1] = tuple(subVector(figure.fmax[-1], figure.center[-1]))
+
             # align vertices
             v_restore = (4 - (count_vert % 4)) % 4 # fill count until %4 will be 0
             for _ in range(v_restore):
