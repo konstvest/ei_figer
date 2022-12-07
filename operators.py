@@ -342,6 +342,7 @@ class CAnimation_OP_import(bpy.types.Operator):
         active_model.reset('anm')
 
         read_animations(resFile, model_name, anm_name)
+        collect_links()
         ei2abs_rorations()
         abs2Blender_rotations()
         insert_animation(active_model.anm_list)
