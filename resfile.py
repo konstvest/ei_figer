@@ -202,7 +202,7 @@ class ResFile:
             raise InvalidResFile(message) from ex
 
     def _lower_ascii(self, value):
-        return ''.join((c.lower() if ord(c) >= 128 else c) for c in value)
+        return ''.join((c.lower() if ord(c) < 128 else c) for c in value)
 
     def _read_headers(self):
         self._file.seek(0, 2)
@@ -222,7 +222,7 @@ class ResFile:
         for table_entry in struct.iter_unpack(_TABLE_ENTRY_FORMAT, tables_data):
             _, file_size, file_offset, modify_timestamp, name_length, name_offset = table_entry
             name = names_data[name_offset:name_offset+name_length].decode('cp1251')
-            self._table[self._lower_ascii(name)] = ResFileItemInfo(
+            self._table[name] = ResFileItemInfo(
                 name=name, file_size=file_size, file_offset=file_offset,
                 modify_time=datetime.fromtimestamp(modify_timestamp)
             )
